@@ -1,35 +1,35 @@
 """Core Calendar client contract definitions and factory placeholder."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 from calendar_client_api.event import Event
+from typing import Optional
 
 class CalendarClient(ABC):
     """Abstract class defines the contract/methods for any calendar client."""
 
     @abstractmethod
     def create_event(self, title:str, start: str, end: str, calendar_id: Optional[str]) -> Event:
-        """Create Calendar event"""
+        """Create Calendar event."""
         raise NotImplementedError
 
     @abstractmethod
     def get_event(self, event_id: str, calendar_id: Optional[str]) -> Event:
-        """Return an event and its details based on ID"""
+        """Return an event and its details based on ID."""
         raise NotImplementedError
 
     @abstractmethod
     def list_events(self, calendar_id: Optional[str], max_results: int = 10) -> list[Event]:
-        """List calendar events and their details"""
+        """List calendar events and their details."""
         raise NotImplementedError
 
-    """Updates a calendar event"""
     @abstractmethod
     def update_event(self, event_id: str, title: str, start: str, end: str, calendar_id: Optional[str]) -> None:
+        """Updates a calendar event."""
         raise NotImplementedError
 
     @abstractmethod
     def delete_event(self, event_id: str, calendar_id: Optional[str]) -> None:
-        """Delete an event by ID"""
+        """Delete an event by ID."""
         raise NotImplementedError
 
 """Stores the concrete CalendarClient class after registration.
@@ -45,7 +45,7 @@ def register_client(factory: type[CalendarClient]) -> None:
 
 def get_client() -> CalendarClient:
     if _client_factory is None:
-        """Return an instance of the registered CalendarClient via dependency injection. Raises error if no implementation has been registered"""
+        """Return an instance of the registered CalendarClient via dependency injection. Raises error if no implementation has been registered."""
         raise NotImplementedError
     return _client_factory()
 

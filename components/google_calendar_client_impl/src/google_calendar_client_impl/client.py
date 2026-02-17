@@ -23,7 +23,7 @@ class GoogleCalendarClient(CalendarClient):
         """Retrieve a calendar event by its ID."""
         raise NotImplementedError
 
-    def list_events(self, calendar_id: Optional[str] | None, max_results: int = 10) -> list[Event]:
+    def list_events(self, calendar_id: Optional[str], max_results: int = 10) -> list[Event]:
         """Return a list of calendar events."""
         raise NotImplementedError
 
