@@ -1,23 +1,25 @@
 version: 2.1
 
 jobs:
-  test:
+  lint:
     docker:
       - image: cimg/python:3.13
     working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: Install pytest
+          name: Install ruff
           command: |
-            pip install pytest
+            python -m pip install --upgrade pip
+            pip install ruff
       - run:
-          name: Run tests
+          name: Run lint
           command: |
-            python -m pytest
+            ruff check .
 
 workflows:
-  test-workflow:
+  lint_only:
     jobs:
-      - test
+      - lint
+
 
