@@ -3,17 +3,21 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.13
+    working_directory: ~/repo
     steps:
       - checkout
       - run:
           name: Install pytest
-          command: pip install pytest
+          command: |
+            pip install pytest
       - run:
           name: Run tests
-          command: pytest
+          command: |
+            python -m pytest
 
 workflows:
   test-workflow:
     jobs:
       - test
+
