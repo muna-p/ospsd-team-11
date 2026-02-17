@@ -33,30 +33,104 @@ jobs:
           command: |
             mypy .
 
-  tests:
+  unit_tests:
     docker:
       - image: cimg/python:3.13
     working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install dependencies of root and all components
           command: |
             python -m pip install --upgrade pip
             pip install -e ".[dev]"
+            for d in components/*; do
+              if [ -f "$d/pyproject.toml" ]; then
+                pip install -e "$d[dev]"
+              fi
+            done
       - run:
-          name: Run tests
+          name: Run unit tests per component
           command: |
-            pytest tests/ -v --cov=components --cov-report=html --cov-report=term
+            mkdir -p test-results/unit
+            for d in components/*; do
+              if [ -d "$d/tests" ]; then
+                name="$(basename "$d")"
+                echo "=== Running unit tests for $name ==="
+                pytest "$d/tests" -v \
+                  --junitxml "test-results/unit/${name}.xml" \
+                  --cov=components --cov-report=term --cov-report=html
+              fi
+            done
+      - store_test_results:
+          path: test-results
       - store_artifacts:
           path: htmlcov
           destination: coverage-report
+
+  
+  integration_tests:
+    docker:
+      - image: cimg/python:3.13
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies of root and all components
+          command: |
+            python -m pip install --upgrade pip
+            pip install -e ".[dev]"
+            for d in components/*; do
+              if [ -f "$d/pyproject.toml" ]; then
+                pip install -e "$d[dev]"
+              fi
+            done
+      - run:
+          name: Run integration tests
+          command: |
+            mkdir -p test-results/integration
+            pytest tests/integration -v \
+              --junitxml test-results/integration/results.xml
+      - store_test_results:
+          path: test-results
+
+  e2e_tests:
+    docker:
+      - image: cimg/python:3.13
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies of root and all components
+          command: |
+            python -m pip install --upgrade pip
+            pip install -e ".[dev]"
+            for d in components/*; do
+              if [ -f "$d/pyproject.toml" ]; then
+                pip install -e "$d[dev]"
+              fi
+            done
+      - run:
+          name: Run E2E tests
+          command: |
+            mkdir -p test-results/e2e
+            pytest tests/e2e -v \
+              --junitxml test-results/e2e/results.xml
+      - store_test_results:
+          path: test-results
+
 
 workflows:
   lint_types_tests:
     jobs:
       - lint
       - types
-      - tests
+      - unit_tests
+      - integration_tests:
+          requires:
+            - unit_tests
+      - e2e_tests:
+          requires:
+            - integration_tests
 
 
