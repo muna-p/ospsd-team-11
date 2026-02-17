@@ -728,6 +728,10 @@ wheels = [
 name = "ospsd-team-11"
 version = "0.1.0"
 source = { virtual = "." }
+dependencies = [
+    { name = "calendar-client-api" },
+    { name = "google-calendar-client-impl" },
+]
 
 [package.optional-dependencies]
 dev = [
@@ -743,9 +747,16 @@ dev = [
     { name = "types-requests" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
+    { name = "calendar-client-api", editable = "components/calendar_client_api" },
     { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
+    { name = "google-calendar-client-impl", editable = "components/google_calendar_client_impl" },
     { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
     { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.6.15" },
     { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=1.16.12" },
@@ -757,6 +768,9 @@ requires-dist = [
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.4.20250611" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.15.1" }]
 
 [[package]]
 name = "packaging"

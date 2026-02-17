@@ -1,0 +1,4 @@
+from calendar_client_api.client import register_client
+from google_calendar_client_impl.client import GoogleCalendarClient
+
+register_client(GoogleCalendarClient)
