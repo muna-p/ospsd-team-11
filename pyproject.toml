@@ -22,8 +22,8 @@ dev = [
 
 [tool.uv.workspace]
 members = [
-  "components/calendar_client_api",
-  "components/google_calendar_client_impl",
+    "components/calendar_client_api",
+    "components/google_calendar_client_impl",
 ]
 
 [tool.ruff]
@@ -33,9 +33,10 @@ target-version = "py313"
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "D203", # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible. Ignoring `incorrect-blank-line-before-class`.
-  "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
-  "S101", # Use of `assert` detected
+    "D203", # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible. Ignoring `incorrect-blank-line-before-class`.
+    "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
+    "S101", # Use of `assert` detected
+    "COM812" # `missing-trailing-comma` cause conflicts with ruff formatter. Ignoring `missing-trailing-comma`
 ]
 per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106", "INP001", "PLC0415"] }
 
