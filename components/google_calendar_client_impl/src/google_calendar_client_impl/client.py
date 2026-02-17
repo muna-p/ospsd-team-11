@@ -1,7 +1,8 @@
 """Google Calendar implementation of the CalendarClient interface."""
 
 from calendar_client_api.client import CalendarClient
-from typing import Optional, type
+from calendar_client_api.event import Event
+from typing import Optional
 
 class GoogleCalendarClient(CalendarClient):
     """Concrete implementation of CalendarClient using Google Calendar."""
