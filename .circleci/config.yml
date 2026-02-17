@@ -17,9 +17,46 @@ jobs:
           command: |
             ruff check .
 
+  types:
+    docker:
+      - image: cimg/python:3.13
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -e ".[dev]"
+      - run:
+          name: Run mypy type checking
+          command: |
+            mypy .
+
+  tests:
+    docker:
+      - image: cimg/python:3.13
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -e ".[dev]"
+      - run:
+          name: Run tests
+          command: |
+            pytest tests/ -v --cov=components --cov-report=html --cov-report=term
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
+
 workflows:
-  lint_only:
+  lint_types_tests:
     jobs:
       - lint
+      - types
+      - tests
 
 
