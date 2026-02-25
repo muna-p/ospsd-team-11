@@ -16,10 +16,10 @@ google-calendar-client-impl = { workspace = true }
 [project.optional-dependencies]
 dev = [
     "mkdocs>=1.6.1",
-    "mkdocs-material>=9.6.15",
+    "mkdocs-material>=9.7.3",
     "pymdown-extensions>=10.16.1",
-    "mkdocstrings-python>=1.16.12",
-    "ruff>=0.12.7",
+    "mkdocstrings-python>=2.0.3",
+    "ruff>=0.15.2",
     "mypy>=1.17.0",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
@@ -94,9 +94,4 @@ exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
-]
-
-[dependency-groups]
-dev = [
-    "ruff>=0.15.1",
 ]
