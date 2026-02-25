@@ -19,8 +19,8 @@
 - [ ] 🔨 Build / tooling
 
 ## Impacted Areas
-- [ ] `mail_client_api`
-- [ ] `gmail_client_impl`
+- [ ] `calendar_client_api`
+- [ ] `google_calendar_client_impl`
 - [ ] Documentation
 - [ ] Tests
 - [ ] Tooling / CI
@@ -30,8 +30,8 @@
 ### Commands executed
 ```bash
 # Example (edit as needed)
-uv run pytest src/ tests/
-uv run mypy src tests
+uv run pytest components/ tests/
+uv run mypy .
 uv run ruff check .
 ```
 

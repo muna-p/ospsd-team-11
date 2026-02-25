@@ -1,17 +1,22 @@
-from dataclasses import dataclass
+"""Event contract - Core event representation."""
+
 from abc import ABC, abstractmethod
-from datetime import datetime, date
-from typing import Optional
+from dataclasses import dataclass
+from datetime import date, datetime
 
 
-@dataclass
+@dataclass(frozen=True)
 class Attendee:
+    """An attendee for an event."""
+
     id: str
     email: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class Event(ABC):
+    """An abstract class representing an Event."""
+
     @property
     @abstractmethod
     def calendar_id(self) -> str:
@@ -43,14 +48,14 @@ class Event(ABC):
         raise NotImplementedError
 
     @property
-    def start_time(self) -> Optional[datetime]:
+    def start_time(self) -> datetime | None:
         """Returns the start datetime of the time-specific events, all-day events return None."""
-        return None
+        raise NotImplementedError
 
     @property
-    def end_time(self) -> Optional[datetime]:
+    def end_time(self) -> datetime | None:
         """Returns the end datetime of the time-specific events, all-day events return None."""
-        return None
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -66,13 +71,13 @@ class Event(ABC):
 
     @property
     @abstractmethod
-    def description(self) -> str:
+    def description(self) -> str | None:
         """Returns the description of the event."""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def location(self) -> str:
+    def location(self) -> str | None:
         """Returns the location of the event."""
         raise NotImplementedError
 
@@ -82,13 +87,14 @@ class Event(ABC):
         """Returns the urls of the attachments of the event."""
         raise NotImplementedError
 
-def get_event(calendar_id: str, event_id: str, raw_data: str) -> Event:
-    """Return an instance of a Message.
+
+def get_event(event_id: str, raw_data: str, calendar_id: str = "primary") -> Event:
+    """Return an instance of a Event.
 
     Args:
-        calendar_id (str): The unique identifier for the calendar where the event belongs.
         event_id (str): The unique identifier for the event.
         raw_data (str): The calendar event raw data used to construct the event.
+        calendar_id (str): The unique identifier for the calendar where the event belongs.
 
     Returns:
         Event: An instance conforming to the Event contract.
