@@ -37,10 +37,14 @@ This project implements a Calendar Client. The interface defines a contract for 
 ### Installation
 
 ```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```bash
 # Clone the repository
 git clone <repo-url> && cd <repo-name>
-
-## Toolchain Usage
+```
 
 ## Toolchain Usage
 
