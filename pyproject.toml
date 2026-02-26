@@ -58,12 +58,12 @@ ignore_missing_imports = false
 warn_unused_ignores = false
 
 # Allow untyped imports for specific modules
-[[tool.mypy.overrides]]
-module = [
-    # "google.*",
-    # "googleapiclient.*",
-]
-ignore_missing_imports = true
+#[[tool.mypy.overrides]]
+#module = [
+#    "google.*",
+#    "googleapiclient.*",
+#]
+#ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

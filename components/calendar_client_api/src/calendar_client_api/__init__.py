@@ -12,6 +12,3 @@ from calendar_client_api.event import (
 from calendar_client_api.event import (
     Event as Event,
 )
-from calendar_client_api.event import (
-    get_event as get_event,
-)
