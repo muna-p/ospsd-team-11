@@ -9,7 +9,6 @@ from datetime import datetime
 class Attendee:
     """An attendee for an event."""
 
-    id: str
     email: str
     name: str | None = None
 
