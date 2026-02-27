@@ -12,8 +12,9 @@ This project implements a Calendar Client. The interface defines a contract for 
 ├── components/
 │   ├── calendar_client_api/          # Interface 
 │   │   └── src/calendar_client_api/
-│   │       ├── client.py             # CalendarClient + get_client()
-│   │       └── event.py              # Event + Attendee dataclass
+│   │       ├── client.py             # CalendarClient
+│   │       ├── event.py              # Event contract, Attendee + EventCreate + EventUpdate dataclasses
+│   │       └── registry              # Registry + get_client()
 │   └── google_calendar_client_impl/  # Concrete implementation
 │       └── src/google_calendar_client_impl/
 │           ├── client_impl.py        # GoogleCalendarClient

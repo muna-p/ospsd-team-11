@@ -30,13 +30,15 @@ class Event(ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def start_time(self) -> datetime:
-        """Returns the start datetime of the time-specific events, all-day events return None."""
+        """Returns the start datetime of the time-specific events."""
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def end_time(self) -> datetime:
-        """Returns the end datetime of the time-specific events, all-day events return None."""
+        """Returns the end datetime of the time-specific events."""
         raise NotImplementedError
 
     @property
@@ -62,3 +64,42 @@ class Event(ABC):
     def attachments(self) -> list[str]:
         """Returns the urls of the attachments of the event."""
         raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class EventCreate:
+    """Information used to create an event."""
+
+    title: str
+    start_time: datetime
+    end_time: datetime
+    attendees: list[Attendee]
+    attachments: list[str]
+    description: str | None = None
+    location: str | None = None
+
+
+class _UnsetType:
+    """Sentinel type used to represent an unset value."""
+
+    __slots__ = ()
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __repr__(self) -> str:
+        return "UNSET"
+
+
+UNSET = _UnsetType()
+
+
+@dataclass(frozen=True)
+class EventUpdate:
+    """Information used to update an event."""
+
+    title: str | _UnsetType = UNSET
+    start_time: datetime | _UnsetType = UNSET
+    end_time: datetime | _UnsetType = UNSET
+    description: str | None | _UnsetType = UNSET
+    location: str | None | _UnsetType = UNSET

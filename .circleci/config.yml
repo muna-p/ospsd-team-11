@@ -10,21 +10,22 @@ jobs:
       - run:
           name: "Install UV and Add to Path"
           command: |
+            set -euo pipefail
             curl -LsSf https://astral.sh/uv/install.sh | sh
             echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
             source $BASH_ENV
-            uv --version # Verify installation
+            uv --version
       - run:
           name: "Create Virtual Env & Install All Dependencies via UV Sync"
           command: |
-            # Create venv in the default .venv location
+            set -euo pipefail
             uv venv --python 3.13
             source .venv/bin/activate
-            # Install all dependencies including dev/test extras
             uv sync --all-packages --extra dev --verbose
       - run:
           name: "Verify Installation"
           command: |
+            set -euo pipefail
             source .venv/bin/activate
             uv tree
             ruff --version
@@ -32,7 +33,6 @@ jobs:
             mypy --version
             coverage --version
       - persist_to_workspace:
-          # Persist the entire project directory, including the populated .venv
           root: .
           paths:
             - .
@@ -72,6 +72,7 @@ jobs:
       - run:
           name: Run unit tests per component
           command: |
+            set -euo pipefail
             source .venv/bin/activate
             mkdir -p test-results/unit
             for d in components/*; do
