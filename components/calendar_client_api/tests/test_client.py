@@ -176,4 +176,3 @@ class TestGetClient:
         """Test that package-level get_client mirrors registry behavior."""
         with pytest.raises(RuntimeError, match=r"No CalendarClient registered\."):
             calendar_client_api.get_client()
-
