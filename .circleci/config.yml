@@ -10,22 +10,20 @@ jobs:
       - run:
           name: "Install UV and Add to Path"
           command: |
-            set -euo pipefail
-            curl -LsSf https://astral.sh/uv/install.sh | sh
+            # set -eo pipefail is not needed since it's CircleCI's default setting
+            curl -LsSf https://astral.sh/uv/install.sh | sh 
             echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
             source $BASH_ENV
             uv --version
       - run:
           name: "Create Virtual Env & Install All Dependencies via UV Sync"
           command: |
-            set -euo pipefail
             uv venv --python 3.13
             source .venv/bin/activate
             uv sync --all-packages --extra dev --verbose
       - run:
           name: "Verify Installation"
           command: |
-            set -euo pipefail
             source .venv/bin/activate
             uv tree
             ruff --version
@@ -79,13 +77,16 @@ jobs:
               if [ -d "$d/tests" ]; then
                 name="$(basename "$d")"
                 echo "=== Running unit tests for $name ==="
-                pytest "$d/tests" -v \
+                pytest "$d/tests" \
+                  -m "not local_credentials" -v \
                   --junitxml "test-results/unit/${name}.xml" \
-                  --cov=components --cov-report=term --cov-report=html
+                  --cov="$d/src" --cov-report=term --cov-report=html
               fi
             done
       - store_test_results:
-          path: test-results
+          path: test-results/unit
+      - store_artifacts:
+          path: test-results/unit
       - store_artifacts:
           path: htmlcov
           destination: coverage-report
@@ -103,10 +104,14 @@ jobs:
           command: |
             source .venv/bin/activate
             mkdir -p test-results/integration
-            pytest tests/integration -v \
-              --junitxml test-results/integration/results.xml
+            pytest tests/integration \
+              -m "not local_credentials" -v \
+              --junitxml test-results/integration/results.xml \
+              --no-cov
       - store_test_results:
-          path: test-results
+          path: test-results/integration
+      - store_artifacts:
+          path: test-results/integration
 
   e2e_tests:
     docker:
@@ -120,10 +125,14 @@ jobs:
           command: |
             source .venv/bin/activate
             mkdir -p test-results/e2e
-            pytest tests/e2e -v \
-              --junitxml test-results/e2e/results.xml
+            pytest tests/e2e \
+              -m "not local_credentials" -v \
+              --junitxml test-results/e2e/results.xml \
+              --no-cov
       - store_test_results:
-          path: test-results
+          path: test-results/e2e
+      - store_artifacts:
+          path: test-results/e2e
 
 
 workflows:
@@ -145,5 +154,3 @@ workflows:
       - e2e_tests:
           requires:
             - integration_tests
-
-

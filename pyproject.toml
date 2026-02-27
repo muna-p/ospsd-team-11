@@ -66,17 +66,21 @@ warn_unused_ignores = false
 #ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-pythonpath = [
-    ".",
-    "components/calendar_client_api/src",
-    "components/google_calendar_client_impl/src",
-]
+#pythonpath = [ # should rely on uv to manage dependencies instead of pythonpath tricks
+#    ".",
+#    "components/calendar_client_api/src",
+#    "components/google_calendar_client_impl/src",
+#]
+
 testpaths = [
     "tests",
     "components/calendar_client_api/tests",
-    "components/google_calendar_client_impl/tests"
+    "components/google_calendar_client_impl/tests",
 ]
-addopts = ["--cov", "--cov-report=term-missing", "--import-mode=importlib"]
+addopts = [
+    "--cov-report=term-missing",
+    "--import-mode=importlib",
+]
 markers = [
     "unit: marks tests as unit tests (fast, isolated)",
     "integration: marks tests as integration tests (medium speed, real dependencies)",
@@ -86,10 +90,10 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = [
-    "components/calendar_client_api/src",
-    "components/google_calendar_client_impl/src"
-]
+#source = [ # removing this enables us to specify coverage in command line
+#    "components/calendar_client_api/src",
+#    "components/google_calendar_client_impl/src"
+#]
 omit = ["*/tests/*", "*/__main__.py"]
 
 [tool.coverage.report]
