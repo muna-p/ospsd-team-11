@@ -24,11 +24,3 @@ packages = ["src/google_calendar_client_impl"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/google_calendar_client_impl/py.typed" = "google_calendar_client_impl/py.typed"
-
-[tool.ruff]
-line-length = 100
-target-version = "py313"
-extend = "../../pyproject.toml"
-
-#[tool.ruff.lint]
-#ignore = []
