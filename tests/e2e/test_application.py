@@ -1,4 +1,5 @@
 """End-to-End tests for the application."""
+
 import pytest
 
 

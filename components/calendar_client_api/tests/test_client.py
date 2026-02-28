@@ -90,7 +90,7 @@ class TestCalendarClientABC:
     def test_list_events_default_max_results_is_10(self) -> None:
         """Test that list_events keeps backward-compatible default max_results."""
         signature = inspect.signature(CalendarClient.list_events)
-        assert signature.parameters["max_results"].default == 10 # noqa: PLR2004
+        assert signature.parameters["max_results"].default == 10  # noqa: PLR2004
 
 
 class TestGetClient:
@@ -147,7 +147,7 @@ class TestGetClient:
         first = get_client()
         second = get_client()
 
-        assert len(created_clients) == 2 # noqa: PLR2004
+        assert len(created_clients) == 2  # noqa: PLR2004
         assert first is created_clients[0]
         assert second is created_clients[1]
         assert first is not second
