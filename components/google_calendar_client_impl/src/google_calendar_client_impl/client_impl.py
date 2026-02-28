@@ -19,8 +19,8 @@ from googleapiclient.discovery import Resource, build
 class GoogleCalendarClient(CalendarClient):
     """Concrete implementation of CalendarClient using Google Calendar."""
 
-    TOKEN_PATH: ClassVar[str] = os.getenv("GOOGLE_TOKEN_PATH", "token.json")
-    CREDENTIALS_PATH: ClassVar[str] = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials.json")
+    TOKEN_PATH: ClassVar[str] = "token.json"  # noqa: S105
+    CREDENTIALS_PATH: ClassVar[str] = "credentials.json"
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/calendar",
     ]
@@ -53,7 +53,7 @@ class GoogleCalendarClient(CalendarClient):
         # Save the credentials for the next run
         if creds and creds.valid and creds.refresh_token:
             with Path(token_path).open("w", encoding="utf-8") as file:
-                file.write(creds.to_json()) # type: ignore[no-untyped-call]
+                file.write(creds.to_json())  # type: ignore[no-untyped-call]
 
         self.service = build("calendar", "v3", credentials=creds)
 
@@ -88,7 +88,7 @@ class GoogleCalendarClient(CalendarClient):
             err_msg = f"'{creds_path}' not found. Cannot run interactive auth."
             raise FileNotFoundError(err_msg)
         flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.SCOPES)
-        return flow.run_local_server(port=0) # type: ignore[no-any-return]
+        return flow.run_local_server(port=0)  # type: ignore[no-any-return]
 
     def _auth_from_file(self, token_path: str) -> Credentials | None:
         # get the token (access&refresh token) from token.json if the file exists
@@ -158,7 +158,6 @@ def load_env() -> None:
 
 def get_google_calendar_client() -> GoogleCalendarClient:
     """Get a Google Calendar client."""
-    load_env()
     return GoogleCalendarClient()
 
 
