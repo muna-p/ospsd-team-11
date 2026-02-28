@@ -2,18 +2,21 @@
 
 import logging
 import os
-from collections.abc import Iterable
-from datetime import datetime
+from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
 import calendar_client_api
-from calendar_client_api import CalendarClient, Event, EventCreate, EventUpdate
+from calendar_client_api import Attendee, CalendarClient, Event, EventCreate, EventUpdate
+from calendar_client_api.event import UNSET
 from google.auth.exceptions import GoogleAuthError, RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
+
+from google_calendar_client_impl.event_impl import GoogleCalendarEvent
 
 
 class GoogleCalendarClient(CalendarClient):
@@ -109,21 +112,71 @@ class GoogleCalendarClient(CalendarClient):
 
     def create_event(self, event_create: EventCreate, calendar_id: str = "primary") -> Event:
         """Create a new calendar event and return its ID."""
-        raise NotImplementedError
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        payload = _serialize_event_create(event_create)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        created_payload = (
+            events_resource.insert(
+                calendarId=resolved_calendar_id,
+                body=payload,
+                supportsAttachments=bool(event_create.attachments),
+            )
+            .execute()
+        )
+        return self._event_from_payload(created_payload, calendar_id=resolved_calendar_id)
 
     def get_event(self, event_id: str, calendar_id: str = "primary") -> Event:
         """Retrieve a calendar event by its ID."""
-        raise NotImplementedError
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        event_payload = (
+            events_resource.get(calendarId=resolved_calendar_id, eventId=event_id).execute()
+        )
+        return self._event_from_payload(event_payload, calendar_id=resolved_calendar_id)
 
     def list_events(self, max_results: int = 10, calendar_id: str = "primary") -> Iterable[Event]:
         """Return an iterable of calendar events."""
-        raise NotImplementedError
+        if max_results <= 0:
+            err_msg = "'max_results' must be a positive integer."
+            raise ValueError(err_msg)
+        if max_results > 2500:
+            err_msg = "'max_results' cannot exceed 2500 due to Google Calendar API limits."
+            raise ValueError(err_msg)
+
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_payload = (
+            events_resource.list(
+                calendarId=resolved_calendar_id,
+                maxResults=max_results,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        return self._events_from_list_payload(events_payload, calendar_id=resolved_calendar_id)
 
     def list_events_between(
         self, start: datetime, end: datetime, calendar_id: str = "primary"
     ) -> Iterable[Event]:
         """Return an iterable of calendar events between two dates."""
-        raise NotImplementedError
+        if start >= end:
+            err_msg = "'start' must be earlier than 'end'."
+            raise ValueError(err_msg)
+
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_payload = (
+            events_resource.list(
+                calendarId=resolved_calendar_id,
+                timeMin=_serialize_datetime(start),
+                timeMax=_serialize_datetime(end),
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        return self._events_from_list_payload(events_payload, calendar_id=resolved_calendar_id)
 
     def update_event(
         self,
@@ -132,11 +185,120 @@ class GoogleCalendarClient(CalendarClient):
         calendar_id: str = "primary",
     ) -> Event:
         """Update an existing calendar event."""
-        raise NotImplementedError
+        payload = _serialize_event_update(event_patch)
+        if not payload:
+            err_msg = "No fields were provided in 'event_patch'."
+            raise ValueError(err_msg)
+
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        updated_payload = (
+            events_resource.patch(
+                calendarId=resolved_calendar_id,
+                eventId=event_id,
+                body=payload,
+                supportsAttachments=True,
+            )
+            .execute()
+        )
+        return self._event_from_payload(updated_payload, calendar_id=resolved_calendar_id)
 
     def delete_event(self, event_id: str, calendar_id: str = "primary") -> None:
         """Delete a calendar event by its ID."""
-        raise NotImplementedError
+        resolved_calendar_id = self._resolve_calendar_id(calendar_id)
+        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource.delete(calendarId=resolved_calendar_id, eventId=event_id).execute()
+
+    def _resolve_calendar_id(self, calendar_id: str) -> str:
+        if calendar_id == "primary":
+            return self._default_calendar_id
+        return calendar_id
+
+    def _event_from_payload(self, payload: object, *, calendar_id: str) -> GoogleCalendarEvent:
+        if not isinstance(payload, Mapping):
+            err_msg = "Google Calendar API returned a non-object event payload."
+            raise TypeError(err_msg)
+        return GoogleCalendarEvent(payload=payload, calendar_id=calendar_id)
+
+    def _events_from_list_payload(self, payload: object, *, calendar_id: str) -> list[Event]:
+        if not isinstance(payload, Mapping):
+            err_msg = "Google Calendar API returned an invalid events list payload."
+            raise TypeError(err_msg)
+
+        items = payload.get("items")
+        if items is None:
+            return []
+
+        if not isinstance(items, list):
+            err_msg = "Google Calendar API list payload 'items' must be a list."
+            raise TypeError(err_msg)
+
+        parsed_events: list[Event] = []
+        for item in items:
+            try:
+                parsed_events.append(self._event_from_payload(item, calendar_id=calendar_id))
+            except (TypeError, ValueError):
+                self.logger.warning("Skipping invalid event payload in list response.")
+        return parsed_events
+
+
+def _serialize_event_create(event_create: EventCreate) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "summary": event_create.title,
+        "start": {"dateTime": _serialize_datetime(event_create.start_time)},
+        "end": {"dateTime": _serialize_datetime(event_create.end_time)},
+    }
+    if event_create.description is not None:
+        payload["description"] = event_create.description
+    if event_create.location is not None:
+        payload["location"] = event_create.location
+
+    attendees = _serialize_attendees(event_create.attendees)
+    if attendees:
+        payload["attendees"] = attendees
+
+    attachments = _serialize_attachments(event_create.attachments)
+    if attachments:
+        payload["attachments"] = attachments
+
+    return payload
+
+
+def _serialize_event_update(event_patch: EventUpdate) -> dict[str, object]:
+    payload: dict[str, object] = {}
+
+    if event_patch.title is not UNSET:
+        payload["summary"] = event_patch.title
+    if isinstance(event_patch.start_time, datetime):
+        payload["start"] = {"dateTime": _serialize_datetime(event_patch.start_time)}
+    if isinstance(event_patch.end_time, datetime):
+        payload["end"] = {"dateTime": _serialize_datetime(event_patch.end_time)}
+    if event_patch.description is not UNSET:
+        payload["description"] = event_patch.description
+    if event_patch.location is not UNSET:
+        payload["location"] = event_patch.location
+
+    return payload
+
+
+def _serialize_attendees(attendees: Iterable[Attendee]) -> list[dict[str, str]]:
+    serialized_attendees: list[dict[str, str]] = []
+    for attendee in attendees:
+        attendee_payload: dict[str, str] = {"email": attendee.email}
+        if attendee.name:
+            attendee_payload["displayName"] = attendee.name
+        serialized_attendees.append(attendee_payload)
+    return serialized_attendees
+
+
+def _serialize_attachments(attachments: Iterable[str]) -> list[dict[str, str]]:
+    return [{"fileUrl": attachment} for attachment in attachments if attachment]
+
+
+def _serialize_datetime(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.isoformat()
 
 
 def load_env() -> None:
