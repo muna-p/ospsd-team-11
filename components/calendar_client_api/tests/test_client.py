@@ -30,7 +30,7 @@ class TestCalendarClientABC:
     def test_cannot_instantiate_abstract_class(self) -> None:
         """Test that CalendarClient cannot be instantiated directly."""
         with pytest.raises(TypeError):
-            CalendarClient()  # type: ignore[abstract]
+            CalendarClient()  # type: ignore[abstract] # intentionally instantiating ABC to test TypeError
 
     def test_defines_expected_abstract_methods(self) -> None:
         """Test that CalendarClient declares exactly the expected abstract methods."""

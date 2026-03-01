@@ -51,8 +51,8 @@ class TestAuthFromEnv:
     @pytest.mark.parametrize(
         "exc",
         [
-            GoogleAuthError("bad"),  # type: ignore[no-untyped-call]
-            RefreshError("expired"),  # type: ignore[no-untyped-call]
+            GoogleAuthError("bad"),  # type: ignore[no-untyped-call] # google-auth exception constructors are untyped
+            RefreshError("expired"),  # type: ignore[no-untyped-call] # google-auth exception constructors are untyped
             OSError("network"),
             ValueError("bad"),
         ],
@@ -217,8 +217,8 @@ class TestRefreshTokenIfInvalid:
     @pytest.mark.parametrize(
         "exc",
         [
-            GoogleAuthError("bad"),  # type: ignore[no-untyped-call]
-            RefreshError("expired"),  # type: ignore[no-untyped-call]
+            GoogleAuthError("bad"),  # type: ignore[no-untyped-call] # google-auth exception constructors are untyped
+            RefreshError("expired"),  # type: ignore[no-untyped-call] # google-auth exception constructors are untyped
             OSError("net"),
             ValueError("bad"),
         ],

@@ -13,8 +13,8 @@ from calendar_client_api.event import UNSET
 from google.auth.exceptions import GoogleAuthError, RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
-from googleapiclient.discovery import Resource, build
+from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped] # no py.typed
+from googleapiclient.discovery import Resource, build  # type: ignore[import-untyped] # no py.typed
 
 from google_calendar_client_impl.event_impl import GoogleCalendarEvent
 
@@ -55,7 +55,7 @@ class GoogleCalendarClient(CalendarClient):
         # Save the credentials for the next run
         if creds and creds.valid and creds.refresh_token:
             with Path(token_path).open("w", encoding="utf-8") as file:
-                file.write(creds.to_json())  # type: ignore[no-untyped-call]
+                file.write(creds.to_json())  # type: ignore[no-untyped-call] # google-auth Credentials.to_json() is untyped
 
         self.service = build("calendar", "v3", credentials=creds)
 
@@ -71,7 +71,7 @@ class GoogleCalendarClient(CalendarClient):
             return None
 
         try:
-            creds = Credentials(  # type: ignore[no-untyped-call]
+            creds = Credentials(  # type: ignore[no-untyped-call] # google-auth Credentials.__init__() is untyped
                 None,
                 refresh_token=refresh_token,
                 token_uri=token_uri,
@@ -90,14 +90,14 @@ class GoogleCalendarClient(CalendarClient):
             err_msg = f"'{creds_path}' not found. Cannot run interactive auth."
             raise FileNotFoundError(err_msg)
         flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.SCOPES)
-        return flow.run_local_server(port=0)  # type: ignore[no-any-return]
+        return flow.run_local_server(port=0)  # type: ignore[no-any-return] # run_local_server returns Any due to untyped lib
 
     def _auth_from_file(self, token_path: str) -> Credentials | None:
         # get the token (access&refresh token) from token.json if the file exists
         if not Path(token_path).exists():
             return None
         try:
-            return Credentials.from_authorized_user_file(token_path, self.SCOPES)  # type: ignore[no-untyped-call,no-any-return]
+            return Credentials.from_authorized_user_file(token_path, self.SCOPES)  # type: ignore[no-untyped-call,no-any-return] # google-auth classmethod is untyped and returns Any
         except (OSError, ValueError):
             return None
 
@@ -113,7 +113,7 @@ class GoogleCalendarClient(CalendarClient):
         """Create a new calendar event and return its ID."""
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         payload = _serialize_event_create(event_create)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         created_payload = (
             events_resource.insert(
                 calendarId=resolved_calendar_id,
@@ -127,7 +127,7 @@ class GoogleCalendarClient(CalendarClient):
     def get_event(self, event_id: str, calendar_id: str = "primary") -> Event:
         """Retrieve a calendar event by its ID."""
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         event_payload = (
             events_resource.get(calendarId=resolved_calendar_id, eventId=event_id).execute()
         )
@@ -144,7 +144,7 @@ class GoogleCalendarClient(CalendarClient):
             raise ValueError(err_msg)
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         events_payload = (
             events_resource.list(
                 calendarId=resolved_calendar_id,
@@ -165,7 +165,7 @@ class GoogleCalendarClient(CalendarClient):
             raise ValueError(err_msg)
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         events_payload = (
             events_resource.list(
                 calendarId=resolved_calendar_id,
@@ -191,7 +191,7 @@ class GoogleCalendarClient(CalendarClient):
             raise ValueError(err_msg)
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         updated_payload = (
             events_resource.patch(
                 calendarId=resolved_calendar_id,
@@ -206,7 +206,7 @@ class GoogleCalendarClient(CalendarClient):
     def delete_event(self, event_id: str, calendar_id: str = "primary") -> None:
         """Delete a calendar event by its ID."""
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
-        events_resource = self.service.events()  # type: ignore[attr-defined]
+        events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
         events_resource.delete(calendarId=resolved_calendar_id, eventId=event_id).execute()
 
     def _resolve_calendar_id(self, calendar_id: str) -> str:

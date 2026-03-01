@@ -46,7 +46,20 @@ ignore = [
     "S101", # Use of `assert` detected
     "COM812" # `missing-trailing-comma` cause conflicts with ruff formatter. Ignoring `missing-trailing-comma`
 ]
-per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106", "INP001", "PLC0415"] }
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = [
+    "TRY300",  # try-consider-else — tests use try/except for assertion flow, else block not needed
+    "BLE001",  # blind-except — tests intentionally catch broad exceptions to verify error handling
+    "ANN401",  # dynamically-typed-expressions — tests use Any for mock flexibility
+    "SLF001",  # private-member-access — tests need direct access to _ClientRegistry internals
+    "E501",    # line-too-long — test names and assertions can exceed line length for readability
+    "S105",    # hardcoded-password-assign — test fixtures use fake credential strings
+    "ARG001",  # unused-function-argument — fixtures/mocks injected by pytest may not be referenced
+    "ARG002",  # unused-method-argument — same as ARG001 for method-based test helpers
+    "S106",    # hardcoded-password-func-arg — test fixtures pass fake credentials as arguments
+    "INP001",  # implicit-namespace-package — test directories intentionally omit __init__.py
+    "PLC0415", # import-outside-top-level — tests use deferred imports for reload/isolation testing
+]
 
 [tool.mypy]
 strict = true
