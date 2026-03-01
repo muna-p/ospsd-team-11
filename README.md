@@ -16,7 +16,9 @@ This project implements a Calendar Client. The interface defines a contract for 
 │   │   │   ├── event.py              # Event contract, Attendee + EventCreate + EventUpdate dataclasses
 │   │   │   └── registry.py           # Registry + get_client()
 │   │   └── tests/
-│   │       └── test_client.py        # Unit tests: ABC contract, registry, get_client()
+│   │       └── test_client.py        # Unit tests: Client ABC class, get_client()
+│   │       └── test_event.py         # Unit tests: Event contract, DTOs
+│   │       └── test_registry.py      # Unit tests: registry
 │   └── google_calendar_client_impl/  # Concrete implementation
 │       ├── src/google_calendar_client_impl/
 │       │   ├── client_impl.py        # GoogleCalendarClient
