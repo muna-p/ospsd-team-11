@@ -27,7 +27,6 @@ class GoogleCalendarClient(CalendarClient):
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/calendar",
     ]
-
     def __init__(self, service: Resource | None = None, *, interactive: bool = True) -> None:
         """Initialize the Google calendar client."""
         self._default_calendar_id = os.getenv("DEFAULT_CALENDAR_ID", "primary")
@@ -136,10 +135,11 @@ class GoogleCalendarClient(CalendarClient):
 
     def list_events(self, max_results: int = 10, calendar_id: str = "primary") -> Iterable[Event]:
         """Return an iterable of calendar events."""
+        max_result_limit = 2500
         if max_results <= 0:
             err_msg = "'max_results' must be a positive integer."
             raise ValueError(err_msg)
-        if max_results > 2500:
+        if max_results > max_result_limit:
             err_msg = "'max_results' cannot exceed 2500 due to Google Calendar API limits."
             raise ValueError(err_msg)
 
