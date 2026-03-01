@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 
 import pytest
 from calendar_client_api import Attendee, EventCreate
-
 from google_calendar_client_impl.event_impl import GoogleCalendarEvent
 
 

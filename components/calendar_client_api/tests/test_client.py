@@ -8,10 +8,9 @@ from collections.abc import Iterator
 from datetime import datetime
 from unittest.mock import Mock
 
-import pytest
-
 import calendar_client_api
 import calendar_client_api.client
+import pytest
 from calendar_client_api.client import CalendarClient
 from calendar_client_api.event import Event, EventCreate, EventUpdate
 from calendar_client_api.registry import _ClientRegistry, get_client, register_client

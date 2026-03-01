@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from google.auth.exceptions import GoogleAuthError, RefreshError
 from google.oauth2.credentials import Credentials
-
 from google_calendar_client_impl.client_impl import GoogleCalendarClient
 
 

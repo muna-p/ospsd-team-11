@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from calendar_client_api import Attendee, EventCreate, EventUpdate
-
 from google_calendar_client_impl.client_impl import GoogleCalendarClient
 
 
