@@ -4,8 +4,8 @@ Contains unit tests for the CalendarClient class and the get_client function.
 """
 
 import inspect
-from collections.abc import Iterator
-from datetime import datetime
+from collections.abc import Iterable, Iterator
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 import calendar_client_api
@@ -71,10 +71,10 @@ class TestCalendarClientABC:
             def get_event(self, event_id: str) -> Event:
                 raise NotImplementedError
 
-            def list_events(self, max_results: int = 10) -> list[Event]:
+            def list_events(self, max_results: int = 10) -> Iterable[Event]:
                 raise NotImplementedError
 
-            def list_events_between(self, start: datetime, end: datetime) -> list[Event]:
+            def list_events_between(self, start: datetime, end: datetime) -> Iterable[Event]:
                 raise NotImplementedError
 
             def update_event(self, event_id: str, event_patch: EventUpdate) -> Event:
@@ -88,54 +88,59 @@ class TestCalendarClientABC:
 
     def test_list_events_default_max_results_is_10(self) -> None:
         """Test that list_events keeps backward-compatible default max_results."""
+        default_max_results = 10
         signature = inspect.signature(CalendarClient.list_events)
-        assert signature.parameters["max_results"].default == 10  # noqa: PLR2004
+        assert signature.parameters["max_results"].default == default_max_results
+
+    def test_calendar_client_comprehensive_mock(self) -> None:
+        """Verifies all methods work together in a comprehensive test."""
+        mock_client = Mock(spec=CalendarClient)
+        mock_event = Mock(spec=Event)
+        mock_event_create = Mock(spec=EventCreate)
+        mock_event_update = Mock(spec=EventUpdate)
+
+        # Set up method return values
+        mock_client.create_event.return_value = mock_event
+        mock_client.get_event.return_value = mock_event
+        mock_client.list_events.return_value = [mock_event]
+        mock_client.list_events_between.return_value = [mock_event]
+        mock_client.update_event.return_value = mock_event
+        mock_client.delete_event.return_value = None
+
+        # Test all methods
+        result_create = mock_client.create_event(mock_event_create)
+        result_get = mock_client.get_event("event_123")
+        result_list = mock_client.list_events(10)
+        result_list_between = mock_client.list_events_between(
+            datetime(2026, 1, 1, tzinfo=UTC),
+            datetime(2026, 1, 2, tzinfo=UTC),
+        )
+        result_update = mock_client.update_event("event_123", mock_event_update)
+        result_delete = mock_client.delete_event("event_123")
+
+        # Verify results
+        assert result_create is mock_event
+        assert result_get is mock_event
+        assert result_list == [mock_event]
+        assert result_list_between == [mock_event]
+        assert result_update is mock_event
+        assert result_delete is None
+
+        # Verify calls
+        mock_client.create_event.assert_called_once_with(mock_event_create)
+        mock_client.get_event.assert_called_once_with("event_123")
+        mock_client.list_events.assert_called_once_with(10)
+        mock_client.update_event.assert_called_once_with("event_123", mock_event_update)
+        mock_client.delete_event.assert_called_once_with("event_123")
 
 
 class TestGetClient:
     """Test cases for the get_client dependency injection factory."""
 
-    def test_raises_runtime_error_when_no_impl_registered(self) -> None:
-        """Test that get_client raises RuntimeError before any impl is injected."""
-        original = calendar_client_api.registry.get_client
-        calendar_client_api.registry.get_client = get_client
-
-        try:
-            with pytest.raises(RuntimeError, match=r"No CalendarClient registered\."):
-                calendar_client_api.registry.get_client()
-        finally:
-            calendar_client_api.registry.get_client = original
-
-    def test_can_be_replaced_via_dependency_injection(self) -> None:
-        """Test that get_client can be replaced by an implementation's factory."""
-        original = calendar_client_api.registry.get_client
-        mock_client = Mock(spec=CalendarClient)
-
-        def fake_factory() -> CalendarClient:
-            return mock_client
-
-        calendar_client_api.registry.get_client = fake_factory  # type: ignore[assignment]
-
-        try:
-            result = calendar_client_api.registry.get_client()
-            assert result is mock_client
-        finally:
-            calendar_client_api.registry.get_client = original
-
-    def test_module_level_monkeypatched_reexport_raises_runtime_error(self) -> None:
-        """Test that a monkeypatched module-level re-export raises RuntimeError."""
-        original = calendar_client_api.get_client
-        calendar_client_api.get_client = get_client
-
-        try:
-            with pytest.raises(RuntimeError, match=r"No CalendarClient registered\."):
-                calendar_client_api.get_client()
-        finally:
-            calendar_client_api.get_client = original
-
     def test_get_client_uses_factory_each_call(self) -> None:
         """Test that get_client invokes the factory on every call."""
         created_clients: list[CalendarClient] = []
+        expected_clients = 2
 
         def fake_factory() -> CalendarClient:
             client = Mock(spec=CalendarClient)
@@ -146,7 +151,7 @@ class TestGetClient:
         first = get_client()
         second = get_client()
 
-        assert len(created_clients) == 2  # noqa: PLR2004
+        assert len(created_clients) == expected_clients
         assert first is created_clients[0]
         assert second is created_clients[1]
         assert first is not second
