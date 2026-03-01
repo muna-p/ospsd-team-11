@@ -1,4 +1,4 @@
-"""Integration tests for DI wiring"""
+"""Integration tests for DI wiring."""
 
 import importlib
 from collections.abc import Iterator
