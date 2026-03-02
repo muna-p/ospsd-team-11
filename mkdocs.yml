@@ -45,12 +45,11 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths:
+            - components/calendar_client_api/src
+            - components/google_calendar_client_impl/src
           options:
-            # This helps mkdocstrings find packages in the src directory
-            search_paths:
-              - components/calendar_client_api/src
-              - components/google_calendar_client_impl/src
-            show_source: false
-            docstring_section_style: spacy
-            members_order: source
             show_signature_annotations: true
+            members_order: source
+            docstring_section_style: spacy
+            docstring_style: google
