@@ -25,7 +25,9 @@ def _event_payload(
     }
 
 
-def _build_client(monkeypatch: pytest.MonkeyPatch, default_calendar_id: str = "primary") -> tuple[GoogleCalendarClient, MagicMock]:
+def _build_client(
+    monkeypatch: pytest.MonkeyPatch, default_calendar_id: str = "primary"
+) -> tuple[GoogleCalendarClient, MagicMock]:
     monkeypatch.setenv("DEFAULT_CALENDAR_ID", default_calendar_id)
     service = MagicMock()
     client = GoogleCalendarClient(service=service)
@@ -35,9 +37,7 @@ def _build_client(monkeypatch: pytest.MonkeyPatch, default_calendar_id: str = "p
 class TestGoogleCalendarClientCreate:
     """Tests for create_event."""
 
-    def test_create_event_serializes_payload_and_returns_event(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_event_serializes_payload_and_returns_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create event sends normalized body and returns parsed event."""
         client, service = _build_client(monkeypatch)
         payload = _event_payload(title="Design Review")
@@ -71,9 +71,7 @@ class TestGoogleCalendarClientCreate:
         assert event.id == "evt_123"
         assert event.title == "Design Review"
 
-    def test_create_event_uses_default_calendar_id_from_env(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_event_uses_default_calendar_id_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Default calendar id should resolve from DEFAULT_CALENDAR_ID."""
         client, service = _build_client(monkeypatch, default_calendar_id="team-calendar")
         service.events.return_value.insert.return_value.execute.return_value = _event_payload()
@@ -100,9 +98,7 @@ class TestGoogleCalendarClientRead:
     def test_get_event_fetches_by_id(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """get_event should call Google API with calendar and event identifiers."""
         client, service = _build_client(monkeypatch)
-        service.events.return_value.get.return_value.execute.return_value = _event_payload(
-            event_id="evt_456"
-        )
+        service.events.return_value.get.return_value.execute.return_value = _event_payload(event_id="evt_456")
 
         event = client.get_event("evt_456", calendar_id="work")
 
@@ -144,9 +140,7 @@ class TestGoogleCalendarClientRead:
     def test_list_events_between_passes_time_range(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """list_events_between should pass timeMin/timeMax as RFC3339 strings."""
         client, service = _build_client(monkeypatch)
-        service.events.return_value.list.return_value.execute.return_value = {
-            "items": [_event_payload(event_id="evt_777")]
-        }
+        service.events.return_value.list.return_value.execute.return_value = {"items": [_event_payload(event_id="evt_777")]}
 
         start = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
         end = datetime(2026, 3, 1, 12, 0, tzinfo=UTC)

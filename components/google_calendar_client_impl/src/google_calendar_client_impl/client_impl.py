@@ -27,6 +27,7 @@ class GoogleCalendarClient(CalendarClient):
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/calendar",
     ]
+
     def __init__(self, service: Resource | None = None, *, interactive: bool = True) -> None:
         """Initialize the Google calendar client."""
         self._default_calendar_id = os.getenv("DEFAULT_CALENDAR_ID", "primary")
@@ -63,9 +64,7 @@ class GoogleCalendarClient(CalendarClient):
         client_id = os.environ.get("GOOGLE_CALENDAR_CLIENT_ID")
         client_secret = os.environ.get("GOOGLE_CALENDAR_CLIENT_SECRET")
         refresh_token = os.environ.get("GOOGLE_CALENDAR_REFRESH_TOKEN")
-        token_uri = os.environ.get(
-            "GOOGLE_CALENDAR_TOKEN_URI", "https://oauth2.googleapis.com/token"
-        )
+        token_uri = os.environ.get("GOOGLE_CALENDAR_TOKEN_URI", "https://oauth2.googleapis.com/token")
 
         if not (client_id and client_secret and refresh_token):
             return None
@@ -114,23 +113,18 @@ class GoogleCalendarClient(CalendarClient):
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         payload = _serialize_event_create(event_create)
         events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
-        created_payload = (
-            events_resource.insert(
-                calendarId=resolved_calendar_id,
-                body=payload,
-                supportsAttachments=bool(event_create.attachments),
-            )
-            .execute()
-        )
+        created_payload = events_resource.insert(
+            calendarId=resolved_calendar_id,
+            body=payload,
+            supportsAttachments=bool(event_create.attachments),
+        ).execute()
         return self._event_from_payload(created_payload, calendar_id=resolved_calendar_id)
 
     def get_event(self, event_id: str, calendar_id: str = "primary") -> Event:
         """Retrieve a calendar event by its ID."""
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
-        event_payload = (
-            events_resource.get(calendarId=resolved_calendar_id, eventId=event_id).execute()
-        )
+        event_payload = events_resource.get(calendarId=resolved_calendar_id, eventId=event_id).execute()
         return self._event_from_payload(event_payload, calendar_id=resolved_calendar_id)
 
     def list_events(self, max_results: int = 10, calendar_id: str = "primary") -> Iterable[Event]:
@@ -145,20 +139,15 @@ class GoogleCalendarClient(CalendarClient):
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
-        events_payload = (
-            events_resource.list(
-                calendarId=resolved_calendar_id,
-                maxResults=max_results,
-                singleEvents=True,
-                orderBy="startTime",
-            )
-            .execute()
-        )
+        events_payload = events_resource.list(
+            calendarId=resolved_calendar_id,
+            maxResults=max_results,
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute()
         return self._events_from_list_payload(events_payload, calendar_id=resolved_calendar_id)
 
-    def list_events_between(
-        self, start: datetime, end: datetime, calendar_id: str = "primary"
-    ) -> Iterable[Event]:
+    def list_events_between(self, start: datetime, end: datetime, calendar_id: str = "primary") -> Iterable[Event]:
         """Return an iterable of calendar events between two dates."""
         if start >= end:
             err_msg = "'start' must be earlier than 'end'."
@@ -166,16 +155,13 @@ class GoogleCalendarClient(CalendarClient):
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
-        events_payload = (
-            events_resource.list(
-                calendarId=resolved_calendar_id,
-                timeMin=_serialize_datetime(start),
-                timeMax=_serialize_datetime(end),
-                singleEvents=True,
-                orderBy="startTime",
-            )
-            .execute()
-        )
+        events_payload = events_resource.list(
+            calendarId=resolved_calendar_id,
+            timeMin=_serialize_datetime(start),
+            timeMax=_serialize_datetime(end),
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute()
         return self._events_from_list_payload(events_payload, calendar_id=resolved_calendar_id)
 
     def update_event(
@@ -192,15 +178,12 @@ class GoogleCalendarClient(CalendarClient):
 
         resolved_calendar_id = self._resolve_calendar_id(calendar_id)
         events_resource = self.service.events()  # type: ignore[attr-defined] # Resource is dynamically built; .events() not in stubs
-        updated_payload = (
-            events_resource.patch(
-                calendarId=resolved_calendar_id,
-                eventId=event_id,
-                body=payload,
-                supportsAttachments=True,
-            )
-            .execute()
-        )
+        updated_payload = events_resource.patch(
+            calendarId=resolved_calendar_id,
+            eventId=event_id,
+            body=payload,
+            supportsAttachments=True,
+        ).execute()
         return self._event_from_payload(updated_payload, calendar_id=resolved_calendar_id)
 
     def delete_event(self, event_id: str, calendar_id: str = "primary") -> None:
