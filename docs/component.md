@@ -27,7 +27,7 @@ components/<component_name>/
 ```
 
 ## pyproject.toml Checklist
-- `[project]`: align `name` with the folder, set `version`, `description`, `readme = "README.md"`, `requires-python = ">=3.11"`, and list direct dependencies.
+- `[project]`: align `name` with the folder, set `version`, `description`, `readme = "README.md"`, `requires-python = ">=3.13"`, and list direct dependencies.
 - `[build-system]`: keep hatchling as the backend.
 - `[tool.uv.sources]`: declare workspace dependencies when another component is required.
 
@@ -38,7 +38,7 @@ Document, at minimum: component’s role, scope, factory functions (if any), and
 
 Place concrete classes here so `__init__.py` can focus on exports and dependency injection wiring.
 
-## Package Initialisation (__init__.py)
+## Package Initialisation (`__init__.py`)
 - Contract packages: define the ABC and get_* factory that raises NotImplementedError.
 - Implementation packages: import the contract, handle provider-specific authentication and configuration,
 register themselves with the contract’s DI registry on import.

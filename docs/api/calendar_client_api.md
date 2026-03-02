@@ -7,37 +7,11 @@ This page documents the `CalendarClient` interface used by the Calendar Client s
 ## What this component contains
 
 - **The client interface**: `CalendarClient`, the provider-agnostic contract for calendar operations.
-- **The event contract**: `Event`, the provider-agnostic representation of a calendar event.
-- **Data models**: `Attendee`, `EventCreate`, and `EventUpdate` for standardizing inputs and outputs across implementations.
 - **Dependency injection registry**: `register_client` and `get_client` for selecting a concrete provider implementation at runtime.
 
 ## The Client Interface
 
 ::: calendar_client_api.client.CalendarClient
-    options:
-      show_root_heading: true
-      show_source: true
-
-## Event Contract
-
-::: calendar_client_api.event.Event
-    options:
-      show_root_heading: true
-      show_source: true
-
-## Data Models
-
-::: calendar_client_api.event.Attendee
-    options:
-      show_root_heading: true
-      show_source: true
-
-::: calendar_client_api.event.EventCreate
-    options:
-      show_root_heading: true
-      show_source: true
-
-::: calendar_client_api.event.EventUpdate
     options:
       show_root_heading: true
       show_source: true
