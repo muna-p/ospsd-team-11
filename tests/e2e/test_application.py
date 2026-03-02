@@ -7,14 +7,11 @@ Required environment variables (or a .env file):
     GOOGLE_CALENDAR_CLIENT_ID
     GOOGLE_CALENDAR_CLIENT_SECRET
     GOOGLE_CALENDAR_REFRESH_TOKEN
-
-All tests in this module are marked ``e2e`` and `local_credentials`.
 """
 
 from __future__ import annotations
 
 import contextlib
-import os
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -29,25 +26,9 @@ if TYPE_CHECKING:
 
 load_env()
 
-_REQUIRED_ENV_VARS = (
-    "GOOGLE_CALENDAR_CLIENT_ID",
-    "GOOGLE_CALENDAR_CLIENT_SECRET",
-    "GOOGLE_CALENDAR_REFRESH_TOKEN",
-)
-
-_credentials_missing = not all(os.environ.get(v) for v in _REQUIRED_ENV_VARS)
-
 pytestmark = [
     pytest.mark.e2e,
     pytest.mark.local_credentials,
-    pytest.mark.skipif(
-        _credentials_missing,
-        reason=(
-            "Real Google Calendar credentials are required for e2e tests. "
-            "Set GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, "
-            "and GOOGLE_CALENDAR_REFRESH_TOKEN (or provide a .env file)."
-        ),
-    ),
 ]
 
 
@@ -102,13 +83,8 @@ def transient_event(registered_client: GoogleCalendarClient) -> Iterator[Event]:
         registered_client.delete_event(event.id)
 
 
-@pytest.mark.e2e
 def test_client_creation_via_registry() -> None:
-    """Client creation: registering the factory and resolving via DI returns a live client.
-
-    Workflow validated:
-        register_google_calendar_client() -> get_client() -> GoogleCalendarClient instance
-    """
+    """Client creation: registering the factory and resolving via DI returns a live client."""
     assert _ClientRegistry._factory is None, "Registry must be empty at test start."
 
     register_google_calendar_client()
@@ -121,13 +97,8 @@ def test_client_creation_via_registry() -> None:
     assert isinstance(client, CalendarClient), "GoogleCalendarClient must satisfy the CalendarClient ABC."
 
 
-@pytest.mark.e2e
 def test_create_event_returns_valid_event(registered_client: GoogleCalendarClient) -> None:
-    """API call: create_event posts to the real Google Calendar and returns a structured Event.
-
-    Workflow validated:
-        client creation -> create_event() API call -> Event response handling
-    """
+    """API call: create_event posts to the real Google Calendar and returns a structured Event."""
     event_data = _future_event_create(title="Create Validation")
 
     event = registered_client.create_event(event_data)
@@ -149,16 +120,11 @@ def test_create_event_returns_valid_event(registered_client: GoogleCalendarClien
             registered_client.delete_event(created_event_id)
 
 
-@pytest.mark.e2e
 def test_get_event_returns_matching_event(
     registered_client: GoogleCalendarClient,
     transient_event: Event,
 ) -> None:
-    """API call: get_event retrieves the previously created event by ID.
-
-    Workflow validated:
-        client creation -> get_event() -> response handling (field parity)
-    """
+    """API call: get_event retrieves the previously created event by ID."""
     fetched = registered_client.get_event(transient_event.id)
 
     assert isinstance(fetched, Event)
@@ -168,16 +134,11 @@ def test_get_event_returns_matching_event(
     assert fetched.end_time.date() == transient_event.end_time.date()
 
 
-@pytest.mark.e2e
 def test_list_events_includes_created_event(
     registered_client: GoogleCalendarClient,
     transient_event: Event,
 ) -> None:
-    """API call: list_events returns an iterable that includes the newly created event.
-
-    Workflow validated:
-        client creation -> list_events() -> response handling (contains event)
-    """
+    """API call: list_events returns an iterable that includes the newly created event."""
     now = datetime.now(tz=UTC)
     window_start = now - timedelta(minutes=5)
     window_end = now + timedelta(hours=48)
@@ -191,16 +152,11 @@ def test_list_events_includes_created_event(
     )
 
 
-@pytest.mark.e2e
 def test_update_event_applies_changes(
     registered_client: GoogleCalendarClient,
     transient_event: Event,
 ) -> None:
-    """API call: update_event patches the event and the response reflects the changes.
-
-    Workflow validated:
-        client creation -> update_event() -> response handling (fields updated)
-    """
+    """API call: update_event patches the event and the response reflects the changes."""
     new_title = f"{_E2E_TAG} Updated Title"
     new_description = "Updated by e2e test."
     new_location = "Conference Room B"
@@ -219,13 +175,8 @@ def test_update_event_applies_changes(
     assert updated.location == new_location
 
 
-@pytest.mark.e2e
 def test_delete_event_removes_event(registered_client: GoogleCalendarClient) -> None:
-    """API call: delete_event removes the event from future listings.
-
-    Workflow validated:
-        client creation -> create_event() -> delete_event() -> event absent from list
-    """
+    """API call: delete_event removes the event from future listings."""
     event_data = _future_event_create(title="Delete Validation")
     event = registered_client.create_event(event_data)
     event_id = event.id
@@ -244,13 +195,8 @@ def test_delete_event_removes_event(registered_client: GoogleCalendarClient) -> 
     assert event_id not in events_after, f"Event {event_id!r} still appears in list after deletion."
 
 
-@pytest.mark.e2e
 def test_full_crud_lifecycle() -> None:
-    """Complete workflow: client creation -> create -> get -> list -> update -> delete.
-
-    This single test exercises the entire application lifecycle end-to-end,
-    validating that every step in the chain produces the expected response.
-    """
+    """Complete workflow: client creation -> create -> get -> list -> update -> delete."""
     # 1. Client creation via DI registry
     register_google_calendar_client()
     client = get_client()
