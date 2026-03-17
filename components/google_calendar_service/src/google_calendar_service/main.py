@@ -1,3 +1,6 @@
+"""FastAPI service endpoints for the Google Calendar service component."""
+from typing import Annotated
+
 from fastapi import FastAPI, Query
 
 app = FastAPI(
@@ -19,7 +22,7 @@ def login() -> dict[str, str]:
 
 
 @app.get("/auth/callback")
-def callback(code: str | None = Query(default=None)) -> dict[str, str]:
+def callback(code: Annotated[str | None, Query()] = None) -> dict[str, str]:
     """Handle the OAuth callback from the provider."""
     if code is None:
         return {"message": "Missing authorization code"}
