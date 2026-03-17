@@ -57,9 +57,7 @@ class TestAuthFromEnv:
             ValueError("bad"),
         ],
     )
-    def test_refresh_failure_returns_none(
-        self, monkeypatch: pytest.MonkeyPatch, exc: Exception
-    ) -> None:
+    def test_refresh_failure_returns_none(self, monkeypatch: pytest.MonkeyPatch, exc: Exception) -> None:
         """Return None for each exception type raised during token refresh."""
         monkeypatch.setenv("GOOGLE_CALENDAR_CLIENT_ID", "id")
         monkeypatch.setenv("GOOGLE_CALENDAR_CLIENT_SECRET", "secret")
@@ -255,9 +253,7 @@ class TestInitAuthFlow:
             patch.object(GoogleCalendarClient, "_auth_from_env", return_value=env_creds) as aenv,
             patch.object(GoogleCalendarClient, "_auth_from_file") as afile,
             patch.object(GoogleCalendarClient, "_auth_from_interactive") as aint,
-            patch.object(
-                GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=env_creds
-            ) as aref,
+            patch.object(GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=env_creds) as aref,
             patch("google_calendar_client_impl.client_impl.build") as b,
             patch("google_calendar_client_impl.client_impl.Path") as p,
         ):
@@ -281,9 +277,7 @@ class TestInitAuthFlow:
             patch.object(GoogleCalendarClient, "_auth_from_env", return_value=None),
             patch.object(GoogleCalendarClient, "_auth_from_file", return_value=file_creds) as afile,
             patch.object(GoogleCalendarClient, "_auth_from_interactive") as aint,
-            patch.object(
-                GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=file_creds
-            ),
+            patch.object(GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=file_creds),
             patch("google_calendar_client_impl.client_impl.build") as b,
             patch("google_calendar_client_impl.client_impl.Path") as p,
         ):
@@ -303,12 +297,8 @@ class TestInitAuthFlow:
         with (
             patch.object(GoogleCalendarClient, "_auth_from_env", return_value=None),
             patch.object(GoogleCalendarClient, "_auth_from_file", return_value=None),
-            patch.object(
-                GoogleCalendarClient, "_auth_from_interactive", return_value=int_creds
-            ) as aint,
-            patch.object(
-                GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=int_creds
-            ),
+            patch.object(GoogleCalendarClient, "_auth_from_interactive", return_value=int_creds) as aint,
+            patch.object(GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=int_creds),
             patch("google_calendar_client_impl.client_impl.build") as b,
             patch("google_calendar_client_impl.client_impl.Path") as p,
         ):
@@ -344,9 +334,7 @@ class TestInitAuthFlow:
 
         with (
             patch.object(GoogleCalendarClient, "_auth_from_env", return_value=creds),
-            patch.object(
-                GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=creds
-            ),
+            patch.object(GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=creds),
             patch("google_calendar_client_impl.client_impl.Path") as p,
             patch("google_calendar_client_impl.client_impl.build", return_value=MagicMock()),
         ):
@@ -363,9 +351,7 @@ class TestInitAuthFlow:
 
         with (
             patch.object(GoogleCalendarClient, "_auth_from_env", return_value=creds),
-            patch.object(
-                GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=creds
-            ),
+            patch.object(GoogleCalendarClient, "_auth_refresh_token_if_invalid", return_value=creds),
             patch("google_calendar_client_impl.client_impl.Path") as p,
             patch("google_calendar_client_impl.client_impl.build", return_value=MagicMock()),
         ):
