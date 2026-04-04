@@ -1,0 +1,39 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Tooling Caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IDE files
+.vscode/
+.idea/
+
+# MkDocs build artifacts
+site/
+
+# Secrets
+token.json
+credentials.json
+.env
+.env.local
+.env.*.local
+*.env
+
+.coverage*
+TESTING_STATUS.md

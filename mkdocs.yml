@@ -1,0 +1,55 @@
+site_name: Calendar Client Project
+site_description: "A Calendar Client for a modern Python project."
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+nav:
+  - 'Overview': 'index.md'
+  - 'Architecture': 'component.md'
+  - 'API Reference':
+    - 'Calendar Event API': 'api/event_api.md'
+    - 'Calendar Client API': 'api/calendar_client_api.md'
+    - 'Google Calendar Client Implementation': 'api/google_calendar_client_impl.md'
+    - 'Google Calendar Events Implementation': 'api/google_calendar_event_impl.md'
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite  # Inline code highlighting
+  - pymdownx.tabbed: # tabbed contents
+      alternate_style: true
+  - admonition # Warning/Note boxes
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - components/calendar_client_api/src
+            - components/google_calendar_client_impl/src
+          options:
+            show_signature_annotations: true
+            members_order: source
+            docstring_section_style: spacy
+            docstring_style: google

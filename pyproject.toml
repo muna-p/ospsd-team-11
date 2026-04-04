@@ -1,0 +1,119 @@
+[project]
+name = "ospsd-team-11"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-auth-oauthlib>=1.3.0",
+    "google-calendar-client-impl",
+]
+
+[tool.uv.sources]
+calendar-client-api = { workspace = true }
+google-calendar-client-impl = { workspace = true }
+
+
+[project.optional-dependencies]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.3",
+    "pymdown-extensions>=10.16.1",
+    "mkdocstrings-python>=2.0.3",
+    "ruff>=0.15.2",
+    "mypy>=1.17.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "types-requests>=2.32.4.20250611",
+    "google-api-python-client-stubs>=1.30.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "components/calendar_client_api",
+    "components/google_calendar_client_impl",
+]
+
+[tool.ruff]
+line-length = 130
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203", # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible. Ignoring `incorrect-blank-line-before-class`.
+    "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
+    "S101", # Use of `assert` detected
+    "COM812" # `missing-trailing-comma` cause conflicts with ruff formatter. Ignoring `missing-trailing-comma`
+]
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = [
+    "TRY300",  # try-consider-else — tests use try/except for assertion flow, else block not needed
+    "BLE001",  # blind-except — tests intentionally catch broad exceptions to verify error handling
+    "ANN401",  # dynamically-typed-expressions — tests use Any for mock flexibility
+    "SLF001",  # private-member-access — tests need direct access to _ClientRegistry internals
+    "E501",    # line-too-long — test names and assertions can exceed line length for readability
+    "S105",    # hardcoded-password-assign — test fixtures use fake credential strings
+    "ARG001",  # unused-function-argument — fixtures/mocks injected by pytest may not be referenced
+    "ARG002",  # unused-method-argument — same as ARG001 for method-based test helpers
+    "S106",    # hardcoded-password-func-arg — test fixtures pass fake credentials as arguments
+    "INP001",  # implicit-namespace-package — test directories intentionally omit __init__.py
+    "PLC0415", # import-outside-top-level — tests use deferred imports for reload/isolation testing
+]
+
+[tool.mypy]
+strict = true
+explicit_package_bases = true # Required for src layout
+mypy_path = [
+    "components/calendar_client_api/src",
+    "components/google_calendar_client_impl/src",
+]
+ignore_missing_imports = false
+warn_unused_ignores = false
+
+# Allow untyped imports for specific modules
+#[[tool.mypy.overrides]]
+#module = [
+#    "google.*",
+#    "googleapiclient.*",
+#]
+#ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+#pythonpath = [ # should rely on uv to manage dependencies instead of pythonpath tricks
+#    ".",
+#    "components/calendar_client_api/src",
+#    "components/google_calendar_client_impl/src",
+#]
+
+testpaths = [
+    "tests",
+    "components/calendar_client_api/tests",
+    "components/google_calendar_client_impl/tests",
+]
+addopts = [
+    "--cov-report=term-missing",
+    "--import-mode=importlib",
+]
+markers = [
+    "unit: marks tests as unit tests (fast, isolated)",
+    "integration: marks tests as integration tests (medium speed, real dependencies)",
+    "e2e: marks tests as end-to-end tests (slow, full system)",
+    "circleci: marks tests that can run in CI/CD environments without local credentials",
+    "local_credentials: marks tests that require local credentials.json or token.json files",
+]
+
+[tool.coverage.run]
+#source = [ # removing this enables us to specify coverage in command line
+#    "components/calendar_client_api/src",
+#    "components/google_calendar_client_impl/src"
+#]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 85 # Justification: A high threshold ensures most code is tested.
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
