@@ -6,10 +6,9 @@ from http import HTTPStatus
 from typing import cast
 
 import httpx
-
 from calendar_client_api.client import CalendarClient
-from calendar_client_api.event import EventCreate, EventUpdate
 from calendar_client_api.event import UNSET as API_UNSET
+from calendar_client_api.event import EventCreate, EventUpdate
 from calendar_client_api.exceptions import (
     AuthorizationError,
     CalendarClientError,
@@ -17,7 +16,6 @@ from calendar_client_api.exceptions import (
     ServiceUnavailableError,
     ValidationError,
 )
-from google_calendar_service_adapter.event_adapter import ServiceCalendarEvent
 from google_calendar_service_client.api.default import (
     create_event_events_post,
     delete_event_events_event_id_delete,
@@ -35,6 +33,8 @@ from google_calendar_service_client.models.event_update_request import EventUpda
 from google_calendar_service_client.models.events_envelope import EventsEnvelope
 from google_calendar_service_client.types import UNSET as GEN_UNSET
 from google_calendar_service_client.types import Unset as GenUnset
+
+from google_calendar_service_adapter.event_adapter import ServiceCalendarEvent
 
 API_UNSET_TYPE = type(API_UNSET)
 

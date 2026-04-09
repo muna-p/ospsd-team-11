@@ -35,7 +35,7 @@ from google_calendar_service_adapter import register_service_calendar_client
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-pytestmark = [pytest.mark.e2e, pytest.mark.circleci]
+pytestmark = [pytest.mark.e2e, pytest.mark.local_credentials]
 
 _NOW = datetime(2026, 8, 1, 10, 0, tzinfo=UTC)
 _END = _NOW + timedelta(hours=1)
