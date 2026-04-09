@@ -6,9 +6,10 @@ from http import HTTPStatus
 from typing import cast
 
 import httpx
+
 from calendar_client_api.client import CalendarClient
-from calendar_client_api.event import UNSET as API_UNSET
 from calendar_client_api.event import EventCreate, EventUpdate
+from calendar_client_api.event import UNSET as API_UNSET
 from calendar_client_api.exceptions import (
     AuthorizationError,
     CalendarClientError,
@@ -16,6 +17,7 @@ from calendar_client_api.exceptions import (
     ServiceUnavailableError,
     ValidationError,
 )
+from google_calendar_service_adapter.event_adapter import ServiceCalendarEvent
 from google_calendar_service_client.api.default import (
     create_event_events_post,
     delete_event_events_event_id_delete,
@@ -34,14 +36,10 @@ from google_calendar_service_client.models.events_envelope import EventsEnvelope
 from google_calendar_service_client.types import UNSET as GEN_UNSET
 from google_calendar_service_client.types import Unset as GenUnset
 
-from google_calendar_service_adapter.event_adapter import ServiceCalendarEvent
-
 API_UNSET_TYPE = type(API_UNSET)
 
 
-def _translate_http_error(
-    err: UnexpectedStatus | httpx.HTTPError, event_id: str | None = None
-) -> CalendarClientError:
+def _translate_http_error(err: UnexpectedStatus | httpx.HTTPError, event_id: str | None = None) -> CalendarClientError:
     """Map an HTTP error from the generated client to a domain exception."""
     if isinstance(err, UnexpectedStatus):
         code = err.status_code
@@ -61,9 +59,22 @@ def _translate_http_error(
 class ServiceCalendarClient(CalendarClient):
     """CalendarClient implementation that delegates to the FastAPI service over HTTP."""
 
-    def __init__(self, base_url: str = "http://localhost:8000") -> None:
-        """Initialize with the base URL of the running FastAPI service."""
-        self._client = Client(base_url=base_url, raise_on_unexpected_status=True)
+    def __init__(self, base_url: str = "http://localhost:8000", cookie: dict[str, str] | None = None) -> None:
+        """Initialize with the base URL of the running FastAPI service.
+
+        ``follow_redirects=True`` is required because the generated client omits the
+        trailing slash on all ``/events`` paths, causing FastAPI's default
+        ``redirect_slashes=True`` behavior to issue a 307 redirect to ``/events/``.
+        HTTP 307 preserves the method and body, so the redirect is transparent.
+        """
+        if cookie is None:
+            cookie = {}
+        self._client = Client(
+            base_url=base_url,
+            raise_on_unexpected_status=True,
+            cookies=cookie,
+            follow_redirects=True,
+        )
 
     def create_event(self, event_create: EventCreate) -> ServiceCalendarEvent:
         """Create a calendar event via the service."""

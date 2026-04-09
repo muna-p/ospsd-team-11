@@ -12,16 +12,16 @@ Fixtures
     Calls the real Google Calendar API — requires credentials in the environment.
 ``service_adapter_client``
     Registers ``ServiceCalendarClient`` via DI and yields a ``CalendarClient``.
-    Calls the live deployed service at ``SERVICE_BASE_URL`` (default: localhost:8000).
+    Calls the live deployed service at ``CALENDAR_SERVICE_BASE_URL`` (default: localhost:8000).
 """
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
-
 from calendar_client_api import (
     CalendarClient,
     EventCreate,
@@ -53,11 +53,10 @@ def library_impl_client() -> Iterator[CalendarClient]:
     """Inject GoogleCalendarClient via DI; credentials resolved from env vars or token.json.
 
     Calls ``load_env()`` to load ``.env`` into the environment, then registers a
-    factory that creates ``GoogleCalendarClient(interactive=False)``.  The client
-    resolves credentials in priority order: env vars → ``token.json``.  The
-    ``interactive=False`` flag prevents a browser popup from opening during tests.
+    factory that creates ``GoogleCalendarClient(interactive=True)``.  The client
+    resolves credentials in priority order: env vars → ``token.json``.
     """
-    from google_calendar_client_impl import GoogleCalendarClient, load_env  # noqa: PLC0415
+    from google_calendar_client_impl import GoogleCalendarClient, load_env
 
     load_env()
     _ClientRegistry.clear()
@@ -70,12 +69,26 @@ def library_impl_client() -> Iterator[CalendarClient]:
 def service_adapter_client() -> Iterator[CalendarClient]:
     """Inject ServiceCalendarClient via DI and yield a CalendarClient.
 
-    The service base URL is read from the ``SERVICE_BASE_URL`` environment
-    variable, falling back to ``http://localhost:8000`` for local development.
-    Importing ``google_calendar_service_adapter`` performs the initial DI
-    registration via its ``__init__.py``; subsequent calls re-register
-    explicitly after the registry is cleared.
+    Reads from the environment (via ``.env``):
+      - ``CALENDAR_SERVICE_BASE_URL``  service base URL (default: http://localhost:8000)
+      - ``CALENDAR_COOKIE_ID``         session cookie name used by the service
+      - ``CALENDAR_COOKIE_VALUE``      session cookie value from a prior OAuth login
+
+    If ``CALENDAR_COOKIE_VALUE`` is not set the test is skipped with a descriptive
+    message, avoiding a confusing HTTP 307 redirect failure.
     """
+    from google_calendar_client_impl import load_env
+
+    load_env()
+
+    cookie_value = os.environ.get("CALENDAR_COOKIE_VALUE")
+    if not cookie_value:
+        pytest.skip(
+            "CALENDAR_COOKIE_VALUE is not set. "
+            "Start the service, log in via OAuth, capture the session cookie value, "
+            "and add CALENDAR_COOKIE_VALUE=<value> to your .env file."
+        )
+
     _ClientRegistry.clear()
     register_service_calendar_client()
     yield get_client()

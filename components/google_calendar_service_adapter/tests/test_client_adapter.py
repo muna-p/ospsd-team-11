@@ -55,9 +55,7 @@ def _event_envelope(
 
 
 def _events_envelope(count: int = 2) -> EventsEnvelope:
-    return EventsEnvelope(
-        events=[_event_response(event_id=f"evt_{i}") for i in range(count)]
-    )
+    return EventsEnvelope(events=[_event_response(event_id=f"evt_{i}") for i in range(count)])
 
 
 class TestCreateEvent:
@@ -151,9 +149,7 @@ class TestGetEvent:
     @patch(f"{_BASE}.get_event_events_event_id_get")
     def test_raises_service_unavailable_on_connection_error(self, mock_get: MagicMock) -> None:
         """get_event should translate httpx connection errors into ServiceUnavailableError."""
-        mock_get.sync.side_effect = httpx.ConnectError(
-            "Connection refused", request=httpx.Request("GET", "http://test/events/1")
-        )
+        mock_get.sync.side_effect = httpx.ConnectError("Connection refused", request=httpx.Request("GET", "http://test/events/1"))
 
         client = ServiceCalendarClient()
         with pytest.raises(ServiceUnavailableError):

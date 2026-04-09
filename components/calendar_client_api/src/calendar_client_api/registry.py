@@ -58,9 +58,11 @@ def register_client(factory: Factory) -> None:
     """Register a CalendarClient via dependency injection."""
     _ClientRegistry.register(factory)
 
+
 def register_client_with_credentials(factory: FactoryCredential) -> None:
     """Register a CalendarClient via dependency injection."""
     _ClientRegistry.register_with_credentials(factory)
+
 
 def get_client() -> CalendarClient:
     """Return an instance of the registered CalendarClient via dependency injection.
@@ -69,7 +71,7 @@ def get_client() -> CalendarClient:
     """
     return _ClientRegistry.get()
 
+
 def get_client_with_credentials(creds_token: CredentialsToken) -> CalendarClient:
     """Return an instance of the registered CalendarClient via dependency injection."""
     return _ClientRegistry.get_with_credentials(creds_token)
-

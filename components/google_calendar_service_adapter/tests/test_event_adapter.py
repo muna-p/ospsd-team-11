@@ -45,9 +45,7 @@ class TestServiceCalendarEvent:
 
     def test_maps_required_fields(self) -> None:
         """Required fields should be mapped directly from the response."""
-        event = ServiceCalendarEvent(
-            _make_response(event_id="evt_99", title="Retro")
-        )
+        event = ServiceCalendarEvent(_make_response(event_id="evt_99", title="Retro"))
 
         assert event.id == "evt_99"
         assert event.title == "Retro"
@@ -107,9 +105,7 @@ class TestServiceCalendarEvent:
 
     def test_attachments_passed_through(self) -> None:
         """Attachment URLs should be passed through as-is."""
-        event = ServiceCalendarEvent(
-            _make_response(attachments=["https://a.com/1", "https://b.com/2"])
-        )
+        event = ServiceCalendarEvent(_make_response(attachments=["https://a.com/1", "https://b.com/2"]))
 
         assert event.attachments == ["https://a.com/1", "https://b.com/2"]
 

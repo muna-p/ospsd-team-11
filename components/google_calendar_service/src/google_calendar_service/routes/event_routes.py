@@ -1,5 +1,6 @@
 """Routes for managing Google Calendar events."""
 
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -55,6 +56,17 @@ def list_events(
 ) -> EventsEnvelope:
     """List calendar events."""
     events = client.list_events(max_results=max_results)
+    return EventsEnvelope(events=[to_event_response(event) for event in events])
+
+
+@router.get("/between")
+def list_events_between(
+    client: Annotated[CalendarClient, Depends(_get_client)],
+    start: Annotated[datetime, Query(description="Start of the time range (ISO 8601)")],
+    end: Annotated[datetime, Query(description="End of the time range (ISO 8601)")],
+) -> EventsEnvelope:
+    """List calendar events between two datetimes."""
+    events = client.list_events_between(start, end)
     return EventsEnvelope(events=[to_event_response(event) for event in events])
 
 

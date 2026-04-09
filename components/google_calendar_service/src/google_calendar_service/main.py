@@ -13,10 +13,14 @@ app = FastAPI(
     title="Google Calendar Service",
     version="0.1.0",
 )
+
+
 @app.get("/")
 def root() -> RedirectResponse:
     """Redirect root endpoint to /docs."""
     return RedirectResponse(url="/docs")
+
+
 app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(event_router)
