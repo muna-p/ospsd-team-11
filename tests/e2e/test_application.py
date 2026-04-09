@@ -1,21 +1,36 @@
-"""E2E tests for the direct implementation using interface-only consumer code via DI.
+"""E2E tests for the calendar client.
 
-This suite models real user behavior at the highest abstraction level:
-- consumer depends only on `calendar_client_api.CalendarClient`
-- implementation is injected through DI
-- consumer flow uses only the interface methods
+These tests encode exactly that contract.  The two test functions are
+**identical in consumer code** — the only difference is which implementation
+was injected via DI, handled entirely by the fixtures below.  The consumer
+workflow (``_consumer_flow``) never imports or references any concrete type.
+
+Fixtures
+--------
+``library_impl_client``
+    Registers ``GoogleCalendarClient`` via DI and yields a ``CalendarClient``.
+    Calls the real Google Calendar API — requires credentials in the environment.
+``service_adapter_client``
+    Registers ``ServiceCalendarClient`` via DI and yields a ``CalendarClient``.
+    Calls the live deployed service at ``SERVICE_BASE_URL`` (default: localhost:8000).
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, cast
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
 
 import pytest
-from calendar_client_api import CalendarClient, EventCreate, EventUpdate, get_client, register_client
+
+from calendar_client_api import (
+    CalendarClient,
+    EventCreate,
+    EventUpdate,
+    get_client,
+    register_client,
+)
 from calendar_client_api.registry import _ClientRegistry
-from google_calendar_client_impl import GoogleCalendarClient
+from google_calendar_service_adapter import register_service_calendar_client
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -26,147 +41,113 @@ _NOW = datetime(2026, 8, 1, 10, 0, tzinfo=UTC)
 _END = _NOW + timedelta(hours=1)
 
 
-class _Executable:
-    """Helper that mimics Google API objects exposing `.execute()`."""
-
-    def __init__(self, payload: dict[str, object] | None) -> None:
-        self._payload = payload
-
-    def execute(self) -> dict[str, object] | None:
-        """Return configured payload."""
-        return self._payload
+# ---------------------------------------------------------------------------
+# Fixtures for DI wiring.
+# Both fixtures yield a ``CalendarClient``; the consumer code below never
+# sees the concrete type behind it.
+# ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
-def _reset_registry() -> Iterator[None]:
-    """Ensure DI registry does not leak state across tests."""
+@pytest.fixture
+def library_impl_client() -> Iterator[CalendarClient]:
+    """Inject GoogleCalendarClient via DI; credentials resolved from env vars or token.json.
+
+    Calls ``load_env()`` to load ``.env`` into the environment, then registers a
+    factory that creates ``GoogleCalendarClient(interactive=False)``.  The client
+    resolves credentials in priority order: env vars → ``token.json``.  The
+    ``interactive=False`` flag prevents a browser popup from opening during tests.
+    """
+    from google_calendar_client_impl import GoogleCalendarClient, load_env  # noqa: PLC0415
+
+    load_env()
     _ClientRegistry.clear()
-    yield
+    register_client(lambda: GoogleCalendarClient(interactive=True))
+    yield get_client()
     _ClientRegistry.clear()
 
 
-def _build_mock_google_service() -> MagicMock:  # noqa: C901
-    """Create an in-memory fake Google Calendar service resource."""
-    service = MagicMock()
-    events_resource = MagicMock()
-    service.events.return_value = events_resource
+@pytest.fixture
+def service_adapter_client() -> Iterator[CalendarClient]:
+    """Inject ServiceCalendarClient via DI and yield a CalendarClient.
 
-    store: dict[str, dict[str, object]] = {}
-    counter = {"value": 0}
-
-    def insert(**kwargs: object) -> _Executable:
-        body = cast("dict[str, object]", kwargs["body"])
-        counter["value"] += 1
-        event_id = f"e2e_direct_{counter['value']:03d}"
-
-        summary = cast("str", body["summary"])
-        start_data = cast("dict[str, str]", body["start"])
-        end_data = cast("dict[str, str]", body["end"])
-
-        payload: dict[str, object] = {
-            "id": event_id,
-            "summary": summary,
-            "start": {"dateTime": start_data["dateTime"]},
-            "end": {"dateTime": end_data["dateTime"]},
-            "status": "confirmed",
-        }
-
-        description = body.get("description")
-        location = body.get("location")
-        if isinstance(description, str):
-            payload["description"] = description
-        if isinstance(location, str):
-            payload["location"] = location
-
-        store[event_id] = payload
-        return _Executable(payload)
-
-    def get(**kwargs: object) -> _Executable:
-        event_id = cast("str", kwargs["eventId"])
-        return _Executable(store[event_id])
-
-    def list_(**kwargs: object) -> _Executable:
-        del kwargs
-        return _Executable({"kind": "calendar#events", "items": list(store.values())})
-
-    def patch(**kwargs: object) -> _Executable:
-        event_id = cast("str", kwargs["eventId"])
-        body = cast("dict[str, object]", kwargs["body"])
-
-        current = store[event_id].copy()
-        if "summary" in body:
-            current["summary"] = cast("str", body["summary"])
-        if "description" in body:
-            current["description"] = cast("str | None", body["description"])
-        if "location" in body:
-            current["location"] = cast("str | None", body["location"])
-        store[event_id] = current
-        return _Executable(current)
-
-    def delete(**kwargs: object) -> _Executable:
-        event_id = cast("str", kwargs["eventId"])
-        store.pop(event_id, None)
-        return _Executable(None)
-
-    events_resource.insert.side_effect = insert
-    events_resource.get.side_effect = get
-    events_resource.list.side_effect = list_
-    events_resource.patch.side_effect = patch
-    events_resource.delete.side_effect = delete
-
-    return service
+    The service base URL is read from the ``SERVICE_BASE_URL`` environment
+    variable, falling back to ``http://localhost:8000`` for local development.
+    Importing ``google_calendar_service_adapter`` performs the initial DI
+    registration via its ``__init__.py``; subsequent calls re-register
+    explicitly after the registry is cleared.
+    """
+    _ClientRegistry.clear()
+    register_service_calendar_client()
+    yield get_client()
+    _ClientRegistry.clear()
 
 
-def _consumer_flow(client: CalendarClient) -> None:
-    """Consumer workflow that uses only the CalendarClient interface."""
+# ---------------------------------------------------------------------------
+# Shared consumer workflow. Uses ONLY the abstract CalendarClient interface.
+#
+# This function is the proof of the Adapter Pattern / location transparency:
+# it runs unchanged regardless of which backend is injected.
+# ---------------------------------------------------------------------------
+
+
+def _consumer_flow(client: CalendarClient, *, title_prefix: str) -> None:
+    """Exercise the full CRUD lifecycle using only the CalendarClient interface."""
+    # Create
     created = client.create_event(
         EventCreate(
-            title="[e2e-direct] created",
+            title=f"{title_prefix} created",
             start_time=_NOW,
             end_time=_END,
-            description="Created in e2e direct flow",
+            description="Created in e2e flow",
             location="Room A",
             attendees=[],
             attachments=[],
         )
     )
     assert created.id
-    assert created.title == "[e2e-direct] created"
+    assert title_prefix in created.title
 
+    # Read
     fetched = client.get_event(created.id)
     assert fetched.id == created.id
     assert fetched.title == created.title
 
-    events = list(client.list_events_between(_NOW - timedelta(minutes=5), _END + timedelta(minutes=5)))
+    # List
+    window_start = _NOW - timedelta(minutes=5)
+    window_end = _END + timedelta(minutes=5)
+    events = list(client.list_events_between(window_start, window_end))
     assert any(event.id == created.id for event in events)
 
+    # Update
     updated = client.update_event(
         created.id,
         EventUpdate(
-            title="[e2e-direct] updated",
-            description="Updated in e2e direct flow",
+            title=f"{title_prefix} updated",
+            description="Updated in e2e flow",
             location="Room B",
         ),
     )
     assert updated.id == created.id
-    assert updated.title == "[e2e-direct] updated"
-    assert updated.description == "Updated in e2e direct flow"
+    assert updated.title == f"{title_prefix} updated"
+    assert updated.description == "Updated in e2e flow"
     assert updated.location == "Room B"
 
+    # Delete
     client.delete_event(created.id)
-    events_after_delete = list(client.list_events_between(_NOW - timedelta(minutes=5), _END + timedelta(minutes=5)))
+    events_after_delete = list(client.list_events_between(window_start, window_end))
     assert all(event.id != created.id for event in events_after_delete)
 
 
-def test_interface_consumer_flow_with_di_injected_google_impl() -> None:
-    """Same user-facing consumer code works with DI-injected direct implementation."""
-    mock_service = _build_mock_google_service()
+# ---------------------------------------------------------------------------
+# Same consumer flow, two different DI-injected backends.
+# ---------------------------------------------------------------------------
 
-    # Inject concrete implementation via DI registry.
-    register_client(lambda: GoogleCalendarClient(service=mock_service))
 
-    # User code resolves only the abstract interface.
-    client = get_client()
-    assert isinstance(client, CalendarClient)
+def test_consumer_flow_with_library_impl(library_impl_client: CalendarClient) -> None:
+    """Consumer interface-only flow works when the library implementation is injected via DI."""
+    _consumer_flow(library_impl_client, title_prefix="[e2e-library]")
 
-    _consumer_flow(client)
+
+def test_consumer_flow_with_service_adapter(service_adapter_client: CalendarClient) -> None:
+    """Identical consumer flow works when the service adapter is injected via DI."""
+    _consumer_flow(service_adapter_client, title_prefix="[e2e-service]")

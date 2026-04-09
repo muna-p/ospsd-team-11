@@ -51,6 +51,7 @@ class _ClientRegistry:
     @classmethod
     def clear(cls) -> None:
         cls._factory = None
+        cls._factory_credentials = None
 
 
 def register_client(factory: Factory) -> None:
