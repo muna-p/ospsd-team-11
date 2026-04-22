@@ -4,14 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "google-auth-oauthlib>=1.3.0",
-    "google-calendar-client-impl",
-]
+dependencies = []
 
 [tool.uv.sources]
 calendar-client-api = { workspace = true }
 google-calendar-client-impl = { workspace = true }
+google-calendar-service = { workspace = true }
+google-calendar-service-client = { workspace = true }
+google-calendar-service-adapter = { workspace = true }
 
 
 [project.optional-dependencies]
@@ -32,11 +32,17 @@ dev = [
 members = [
     "components/calendar_client_api",
     "components/google_calendar_client_impl",
+    "components/google_calendar_service",
+    "components/google_calendar_service_api_client",
+    "components/google_calendar_service_adapter",
 ]
 
 [tool.ruff]
 line-length = 130
 target-version = "py313"
+exclude = [
+    "components/google_calendar_service_api_client", # Exclude generated client code from linting
+]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -67,9 +73,14 @@ explicit_package_bases = true # Required for src layout
 mypy_path = [
     "components/calendar_client_api/src",
     "components/google_calendar_client_impl/src",
+    "components/google_calendar_service/src",
+    "components/google_calendar_service_adapter/src",
 ]
 ignore_missing_imports = false
 warn_unused_ignores = false
+exclude = [
+    "components/google_calendar_service_api_client", # Exclude generated client code from type checking
+]
 
 # Allow untyped imports for specific modules
 #[[tool.mypy.overrides]]
@@ -84,12 +95,15 @@ warn_unused_ignores = false
 #    ".",
 #    "components/calendar_client_api/src",
 #    "components/google_calendar_client_impl/src",
+#    "components/google_calendar_service/src",
 #]
 
 testpaths = [
     "tests",
     "components/calendar_client_api/tests",
     "components/google_calendar_client_impl/tests",
+    "components/google_calendar_service/tests",
+    "components/google_calendar_service_adapter/tests"
 ]
 addopts = [
     "--cov-report=term-missing",
@@ -108,7 +122,7 @@ markers = [
 #    "components/calendar_client_api/src",
 #    "components/google_calendar_client_impl/src"
 #]
-omit = ["*/tests/*", "*/__main__.py"]
+omit = ["*/tests/*", "*/__main__.py", "components/google_calendar_service_api_client/*"]
 
 [tool.coverage.report]
 fail_under = 85 # Justification: A high threshold ensures most code is tested.

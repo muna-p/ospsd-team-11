@@ -2,6 +2,9 @@
 
 from google_calendar_client_impl.client_impl import GoogleCalendarClient as GoogleCalendarClient
 from google_calendar_client_impl.client_impl import (
+    get_calendar_client_with_credentials as get_calendar_client_with_credentials,
+)
+from google_calendar_client_impl.client_impl import (
     get_google_calendar_client as get_google_calendar_client,
 )
 from google_calendar_client_impl.client_impl import (
