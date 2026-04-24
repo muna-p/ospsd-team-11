@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Tests for the Google Calendar FastAPI service."""
 
 from collections.abc import Iterable
@@ -5,10 +6,23 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import google_calendar_service.main as main_module
+=======
+# ruff: noqa: D101, D102, D103, D107
+"""Tests for the Google Calendar FastAPI service."""
+
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
+from datetime import UTC, datetime
+
+>>>>>>> upstream/main
 import pytest
 from calendar_client_api.event import Attendee, Event, EventCreate, EventUpdate
 from fastapi.testclient import TestClient
 from google_calendar_service.main import app
+<<<<<<< HEAD
+=======
+from google_calendar_service.routes import event_routes
+>>>>>>> upstream/main
 
 HTTP_OK = 200
 DEFAULT_MAX_RESULTS = 10
@@ -16,6 +30,17 @@ DEFAULT_MAX_RESULTS = 10
 client = TestClient(app)
 
 
+<<<<<<< HEAD
+=======
+@pytest.fixture(autouse=True)
+def override_get_client_dependency() -> Iterator[None]:
+    """Override the events router _get_client dependency with a fake client."""
+    app.dependency_overrides[event_routes._get_client] = fake_get_client
+    yield
+    app.dependency_overrides.pop(event_routes._get_client, None)
+
+
+>>>>>>> upstream/main
 @dataclass(frozen=True)
 class FakeEventData:
     """Concrete event data used to back a fake Event implementation."""
@@ -34,47 +59,74 @@ class FakeEvent(Event):
     """Fake event used for service tests."""
 
     def __init__(self, data: FakeEventData) -> None:
+<<<<<<< HEAD
         """Initialize a fake event from test data."""
+=======
+>>>>>>> upstream/main
         self._data = data
 
     @property
     def id(self) -> str:
+<<<<<<< HEAD
         """Return the event ID."""
+=======
+>>>>>>> upstream/main
         return self._data.event_id
 
     @property
     def title(self) -> str:
+<<<<<<< HEAD
         """Return the event title."""
+=======
+>>>>>>> upstream/main
         return self._data.title
 
     @property
     def start_time(self) -> datetime:
+<<<<<<< HEAD
         """Return the start time."""
+=======
+>>>>>>> upstream/main
         return self._data.start_time
 
     @property
     def end_time(self) -> datetime:
+<<<<<<< HEAD
         """Return the end time."""
+=======
+>>>>>>> upstream/main
         return self._data.end_time
 
     @property
     def description(self) -> str | None:
+<<<<<<< HEAD
         """Return the description."""
+=======
+>>>>>>> upstream/main
         return self._data.description
 
     @property
     def location(self) -> str | None:
+<<<<<<< HEAD
         """Return the location."""
+=======
+>>>>>>> upstream/main
         return self._data.location
 
     @property
     def attendees(self) -> list[Attendee]:
+<<<<<<< HEAD
         """Return the attendees."""
+=======
+>>>>>>> upstream/main
         return self._data.attendees or []
 
     @property
     def attachments(self) -> list[str]:
+<<<<<<< HEAD
         """Return the attachments."""
+=======
+>>>>>>> upstream/main
         return self._data.attachments or []
 
 
@@ -82,7 +134,10 @@ class FakeCalendarClient:
     """Fake calendar client used for service tests."""
 
     def list_events(self, max_results: int = DEFAULT_MAX_RESULTS) -> Iterable[Event]:
+<<<<<<< HEAD
         """Return fake events."""
+=======
+>>>>>>> upstream/main
         assert max_results == DEFAULT_MAX_RESULTS
         return [
             FakeEvent(
@@ -100,7 +155,10 @@ class FakeCalendarClient:
         ]
 
     def get_event(self, event_id: str) -> Event:
+<<<<<<< HEAD
         """Return one fake event by ID."""
+=======
+>>>>>>> upstream/main
         assert event_id == "test_123"
         return FakeEvent(
             FakeEventData(
@@ -116,7 +174,10 @@ class FakeCalendarClient:
         )
 
     def create_event(self, event_create: EventCreate) -> Event:
+<<<<<<< HEAD
         """Return a created fake event."""
+=======
+>>>>>>> upstream/main
         assert event_create.title == "Java Exam"
         assert event_create.description == "Java Midterm"
         assert event_create.location == "2 MetroTech"
@@ -138,7 +199,10 @@ class FakeCalendarClient:
         )
 
     def update_event(self, event_id: str, event_update: EventUpdate) -> Event:
+<<<<<<< HEAD
         """Return an updated fake event."""
+=======
+>>>>>>> upstream/main
         assert event_id == "test_123"
         assert event_update.title == "Updated Java Midterm"
         assert event_update.location == "New 2 MetroTech Room"
@@ -157,20 +221,30 @@ class FakeCalendarClient:
         )
 
     def delete_event(self, event_id: str) -> None:
+<<<<<<< HEAD
         """Delete a fake event."""
+=======
+>>>>>>> upstream/main
         assert event_id == "test_123"
 
 
 def fake_get_client() -> FakeCalendarClient:
+<<<<<<< HEAD
     """Return a fake calendar client."""
+=======
+>>>>>>> upstream/main
     return FakeCalendarClient()
 
 
 class TestHealthEndpoint:
+<<<<<<< HEAD
     """Tests for the health endpoint."""
 
     def test_returns_ok_status(self) -> None:
         """Return a successful health response."""
+=======
+    def test_returns_ok_status(self) -> None:
+>>>>>>> upstream/main
         response = client.get("/health")
 
         assert response.status_code == HTTP_OK
@@ -178,6 +252,7 @@ class TestHealthEndpoint:
 
 
 class TestListEventsEndpoint:
+<<<<<<< HEAD
     """Tests for the list events endpoint."""
 
     def test_returns_serialized_events(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -185,6 +260,10 @@ class TestListEventsEndpoint:
         monkeypatch.setattr(main_module, "get_client", fake_get_client)
 
         response = client.get("/events")
+=======
+    def test_returns_serialized_events(self) -> None:
+        response = client.get("/events/")
+>>>>>>> upstream/main
 
         assert response.status_code == HTTP_OK
         assert response.json() == {
@@ -209,12 +288,16 @@ class TestListEventsEndpoint:
 
 
 class TestGetEventEndpoint:
+<<<<<<< HEAD
     """Tests for the get event endpoint."""
 
     def test_returns_serialized_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Return one serialized event by ID."""
         monkeypatch.setattr(main_module, "get_client", fake_get_client)
 
+=======
+    def test_returns_serialized_event(self) -> None:
+>>>>>>> upstream/main
         response = client.get("/events/test_123")
 
         assert response.status_code == HTTP_OK
@@ -238,6 +321,7 @@ class TestGetEventEndpoint:
 
 
 class TestCreateEventEndpoint:
+<<<<<<< HEAD
     """Tests for the create event endpoint."""
 
     def test_creates_and_returns_serialized_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -246,6 +330,11 @@ class TestCreateEventEndpoint:
 
         response = client.post(
             "/events",
+=======
+    def test_creates_and_returns_serialized_event(self) -> None:
+        response = client.post(
+            "/events/",
+>>>>>>> upstream/main
             json={
                 "title": "Java Exam",
                 "start_time": "2026-03-20T14:00:00+00:00",
@@ -283,12 +372,16 @@ class TestCreateEventEndpoint:
 
 
 class TestUpdateEventEndpoint:
+<<<<<<< HEAD
     """Tests for the update event endpoint."""
 
     def test_updates_and_returns_serialized_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Update an event and return serialized event data."""
         monkeypatch.setattr(main_module, "get_client", fake_get_client)
 
+=======
+    def test_updates_and_returns_serialized_event(self) -> None:
+>>>>>>> upstream/main
         response = client.patch(
             "/events/test_123",
             json={
@@ -318,12 +411,16 @@ class TestUpdateEventEndpoint:
 
 
 class TestDeleteEventEndpoint:
+<<<<<<< HEAD
     """Tests for the delete event endpoint."""
 
     def test_deletes_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Delete an event and return confirmation."""
         monkeypatch.setattr(main_module, "get_client", fake_get_client)
 
+=======
+    def test_deletes_event(self) -> None:
+>>>>>>> upstream/main
         response = client.delete("/events/test_123")
 
         assert response.status_code == HTTP_OK

@@ -1,5 +1,6 @@
 """FastAPI service endpoints for the Google Calendar service component."""
 
+<<<<<<< HEAD
 from typing import Annotated
 
 import google_calendar_client_impl  # noqa: F401 Registers the concrete client via Dependency Injection
@@ -14,6 +15,16 @@ from google_calendar_service.models import (
     StatusResponse,
     to_event_response,
 )
+=======
+from __future__ import annotations
+
+from fastapi import FastAPI
+from starlette.responses import RedirectResponse
+
+from google_calendar_service.routes.auth_routes import router as auth_router
+from google_calendar_service.routes.event_routes import router as event_router
+from google_calendar_service.routes.health_routes import router as health_router
+>>>>>>> upstream/main
 
 app = FastAPI(
     title="Google Calendar Service",
@@ -21,6 +32,7 @@ app = FastAPI(
 )
 
 
+<<<<<<< HEAD
 @app.get("/health")
 def health() -> StatusResponse:
     """Return service health status."""
@@ -79,3 +91,14 @@ def delete_event(event_id: str) -> StatusResponse:
     client = get_client()
     client.delete_event(event_id)
     return StatusResponse(status="deleted")
+=======
+@app.get("/")
+def root() -> RedirectResponse:
+    """Redirect root endpoint to /docs."""
+    return RedirectResponse(url="/docs")
+
+
+app.include_router(auth_router)
+app.include_router(health_router)
+app.include_router(event_router)
+>>>>>>> upstream/main
